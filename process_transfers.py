@@ -46,8 +46,21 @@ for r in recs:
 # kljuc transferja: ime|klub|destinacija ; kljuc igralca: ime|klub|drzava
 prev_path = f'{OUTDIR}/tr_index.json'  # trenutni (postane prejsnji)
 new_moves, new_players = [], []
+prev = None
 if os.path.exists(prev_path):
-    prev = json.load(open(prev_path, encoding='utf-8'))['players']
+    # Prejsnji posnetek beri SAMO kot UTF-8. Ce ni veljaven (stara cp1250
+    # datoteka ali poskodovan zapis), ga zavrzi in obravnavaj kot prvi zagon —
+    # raje to kot lazno "vse je novo" iz napacno dekodiranih smeti.
+    try:
+        prev = json.load(open(prev_path, encoding='utf-8'))['players']
+    except (UnicodeDecodeError, json.JSONDecodeError, KeyError):
+        prev = None
+    if prev is None:
+        print('Opozorilo: prejsnji posnetek ni veljaven UTF-8 — obravnavam kot prvi zagon.')
+        try: os.remove(prev_path)
+        except OSError: pass
+
+if prev is not None:
     prev_move_keys = set(f"{p['n']}|{p.get('to')}" for p in prev if p.get('to'))
     prev_player_keys = set(f"{p['n']}|{p['c']}|{p['co']}" for p in prev)
     for r in clean:
@@ -106,24 +119,21 @@ def app_league(r):
     return tl or coD or 'Europe'
 
 def app_summary(r, status):
+    # Samo metapodatki: pozicija · letnik · narodnost · visina.
+    # Poteza (from -> to) se NE ponavlja tukaj — kartica jo ze prikaze posebej.
     bits = []
     if r.get('p'):   bits.append(r['p'])
     if r.get('y'):   bits.append(str(r['y']))
     if r.get('nat'): bits.append(r['nat'])
     if r.get('h'):   bits.append(f"{r['h']}cm")
-    meta = ' · '.join(bits)
-    frm = r.get('c') or '—'
-    if status == 'roster':
-        return f"{meta} — {frm}".strip(' —')
-    to = (r.get('to') or 'Free Agent')
-    return f"{meta} — {frm} → {to}".strip(' —')
+    return ' · '.join(bits)
 
 def to_app(r, is_new=False):
     to = (r.get('to') or '').strip()
     if to:
         status = 'signed'
     elif r.get('s') == 'left':
-        status = 'left'; to = 'Free Agent'
+        status = 'left'; to = 'Prosti igralec'
     else:
         status = 'roster'; to = r.get('c') or '—'
     obj = {
