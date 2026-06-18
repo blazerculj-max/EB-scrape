@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EuroBall — Verified Scrape Targets + Live Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── THEME VARIABLES ── */
+:root {
+  --bg: #f5f0eb;
+  --bg2: #ede8e2;
+  --bg3: #e4ddd5;
+  --card: #ffffff;
+  --border: #d5cdc4;
+  --border2: #c8bfb5;
+  --accent: #e05c2a;
+  --accent2: #c44e20;
+  --accent-soft: rgba(224,92,42,.10);
+  --green: #2d9e5c;
+  --green-bg: rgba(45,158,92,.10);
+  --red: #d44040;
+  --red-bg: rgba(212,64,64,.10);
+  --yellow: #c8870a;
+  --yellow-bg: rgba(200,135,10,.10);
+  --purple: #7c5cbf;
+  --purple-bg: rgba(124,92,191,.10);
+  --text: #3a3028;
+  --text2: #6b5e52;
+  --text3: #9a8e85;
+  --shadow: rgba(0,0,0,.06);
+  --shadow2: rgba(0,0,0,.12);
+  --mono: 'JetBrains Mono', monospace;
+  --nav-bg: rgba(245,240,235,.95);
+}
+[data-theme="dark"] {
+  --bg: #111318;
+  --bg2: #181c24;
+  --bg3: #1e2330;
+  --card: #1e2330;
+  --border: #2c3444;
+  --border2: #374057;
+  --accent: #f07840;
+  --accent2: #d96530;
+  --accent-soft: rgba(240,120,64,.12);
+  --green: #34c974;
+  --green-bg: rgba(52,201,116,.10);
+  --red: #f05252;
+  --red-bg: rgba(240,82,82,.10);
+  --yellow: #f5c842;
+  --yellow-bg: rgba(245,200,66,.10);
+  --purple: #a87ff5;
+  --purple-bg: rgba(168,127,245,.10);
+  --text: #e2ddd8;
+  --text2: #9aafcc;
+  --text3: #4d6080;
+  --shadow: rgba(0,0,0,.3);
+  --shadow2: rgba(0,0,0,.5);
+  --nav-bg: rgba(17,19,24,.97);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;transition:background .25s,color .25s}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--nav-bg);backdrop-filter:blur(16px);z-index:200;flex-wrap:wrap}
+.logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.5px;white-space:nowrap}
+.logo span{color:var(--accent)}
+.tabs{display:flex;gap:4px}
+.tab{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
+.tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* Theme toggle */
+.theme-toggle{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--text2);transition:all .15s;white-space:nowrap}
+.theme-toggle:hover{border-color:var(--border2);color:var(--text)}
+.theme-icon{font-size:14px;line-height:1}
+
+/* ── PAGES ── */
+.page{display:none}.page.on{display:block}
+
+/* ── TRACKER HEADER ── */
+.tr-header{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--green-bg);border:1px solid var(--green);border-color:rgba(45,158,92,.3);border-radius:99px;padding:3px 10px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.fetch-btn{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(224,92,42,.25)}
+.fetch-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(224,92,42,.35)}
+.fetch-btn:active{transform:translateY(0)}
+.fetch-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.fetch-btn-new{margin-left:0;background:var(--green);box-shadow:0 2px 8px rgba(45,158,92,.25)}
+.fetch-btn-new:hover{background:var(--green);filter:brightness(1.08);box-shadow:0 4px 12px rgba(45,158,92,.35)}
+.tc.is-new{box-shadow:0 0 0 2px var(--green),0 2px 8px var(--shadow2)}
+.new-badge{font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;background:var(--green);border-radius:4px;padding:1px 5px;letter-spacing:.5px}
+.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.last-upd{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* ── SOURCES BAR ── */
+.src-bar{padding:8px 24px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;row-gap:5px}
+.src-item{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.src-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}
+.src-dot.ok{background:var(--green)}
+.src-dot.err{background:var(--red)}
+.src-dot.loading{background:var(--yellow);animation:blink 1s infinite}
+
+
+/* ── PROGRESS ── */
+.prog-wrap{height:3px;background:var(--bg3);display:none}
+.prog-bar{height:100%;background:var(--accent);width:0;transition:width .4s}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.stat-cell{flex:1;padding:10px 16px;text-align:center;border-right:1px solid var(--border)}
+.stat-cell:last-child{border-right:none}
+.sn{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);line-height:1}
+.sl{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;margin-top:2px;letter-spacing:.5px}
+.stat-cell.cg .sn{color:var(--green)}
+.stat-cell.cy .sn{color:var(--yellow)}
+.stat-cell.cr .sn{color:var(--red)}
+.stat-cell.cp .sn{color:var(--purple)}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{position:relative;flex:1;min-width:180px}
+.sw-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+.fsearch{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;color:var(--text);font-family:inherit;font-size:13px;transition:border .15s}
+.fsearch:focus{outline:none;border-color:var(--accent)}
+.fsearch::placeholder{color:var(--text3)}
+.fsel{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 28px 8px 10px;color:var(--text);font-family:inherit;font-size:13px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a8e85'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border .15s}
+.fsel:focus{outline:none;border-color:var(--accent)}
+.sf-btns{display:flex;gap:5px;flex-wrap:wrap}
+.sfb{padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.sfb:hover{border-color:var(--border2);color:var(--text)}
+.sfb.a-all{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.sfb.a-signed{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.sfb.a-rumor{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
+.sfb.a-left{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+.sfb.a-extended{background:var(--purple-bg);color:var(--purple);border-color:var(--purple)}
+.sfb.a-roster{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+
+/* ── TRANSFER CARDS ── */
+.t-area{padding:16px 24px 60px}
+.group-hd{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:16px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.g-cnt{background:var(--bg3);border-radius:99px;padding:1px 8px;font-size:10px;color:var(--text2)}
+.transfers{display:flex;flex-direction:column;gap:6px}
+.tc{background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:38px 1fr auto auto auto;gap:10px;align-items:center;transition:all .15s;cursor:default;box-shadow:0 1px 3px var(--shadow)}
+.tc:hover{border-color:var(--border2);box-shadow:0 2px 8px var(--shadow2);transform:translateY(-1px)}
+.tc.s-signed{border-left:3px solid var(--green)}
+.tc.s-rumor{border-left:3px solid var(--yellow)}
+.tc.s-left{border-left:3px solid var(--red)}
+.tc.s-extended{border-left:3px solid var(--purple)}
+.tc.s-roster{border-left:3px solid var(--border2)}
+.av{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0}
+.tp{font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tpos{font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--bg3);border-radius:4px;padding:1px 6px;border:1px solid var(--border)}
+.tmv{display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap}
+.tf{font-size:12px;color:var(--text2)}
+.ta{color:var(--text3);font-size:10px}
+.tt{font-size:12px;color:var(--accent);font-weight:600}
+.tsum{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4}
+.tleague{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;border:1.5px solid var(--border);color:var(--text2);white-space:nowrap;background:var(--bg2)}
+.tpill{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;white-space:nowrap}
+.p-signed{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,158,92,.3)}
+.p-rumor{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(200,135,10,.3)}
+.p-left{background:var(--red-bg);color:var(--red);border:1px solid rgba(212,64,64,.3)}
+.p-extended{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(124,92,191,.3)}
+.p-roster{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:80px}
+.tdate{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
+.tsrc{font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;display:block}
+.tsrc:hover{text-decoration:underline}
+
+
+/* ── LOADING BALLS ── */
+.loading-bar{padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:none}
+.loading-top{display:flex;align-items:center;gap:12px}
+.balls-row{display:flex;gap:5px;align-items:center}
+.bball{width:26px;height:26px;border-radius:50%;background:var(--accent);border:1.5px solid var(--accent2);position:relative;flex-shrink:0;transition:opacity .3s,transform .3s}
+.bball::before{content:'';position:absolute;top:4px;left:2px;right:2px;bottom:4px;border-radius:50%;border:1.5px solid rgba(0,0,0,.25)}
+.bball::after{content:'';position:absolute;top:2px;left:6px;right:6px;bottom:2px;border:1.5px solid rgba(0,0,0,.2);border-radius:50%}
+.bball.empty{opacity:.12;transform:scale(.82)}
+.bball.active{animation:bbounce .5s ease infinite alternate}
+@keyframes bbounce{0%{transform:translateY(0)}100%{transform:translateY(-5px)}}
+.ld-src-top{font-family:var(--mono);font-size:11px;color:var(--text3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:blink 1.5s infinite}
+.ld-pct{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600;min-width:32px;text-align:right}
+.loading{display:none}.ld-txt{display:none}.ld-src{display:none}
+
+/* ── EMPTY / INIT ── */
+.empty{text-align:center;padding:60px;color:var(--text3)}
+.empty-ico{font-size:40px;margin-bottom:12px}
+.empty-title{color:var(--text2);font-size:16px;font-weight:600;margin-bottom:6px}
+.init-prompt{padding:60px 20px;text-align:center;color:var(--text2)}
+.init-ico{font-size:48px;margin-bottom:16px}
+.init-h{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px}
+.init-p{font-size:13px;max-width:500px;margin:0 auto;line-height:1.75;color:var(--text2)}
+.init-p strong{color:var(--accent)}
+.error-box{background:var(--red-bg);border:1.5px solid rgba(212,64,64,.25);border-radius:10px;padding:16px 20px;margin:16px 24px;display:flex;gap:12px}
+.err-title{font-weight:700;color:var(--red);margin-bottom:4px;font-size:13px}
+.err-msg{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* ── TICKER ── */
+.ticker{overflow:hidden;background:var(--bg3);border-bottom:1px solid var(--border);height:30px;display:flex;align-items:center}
+.ticker-lbl{flex-shrink:0;background:var(--accent);color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:0 10px;height:100%;display:flex;align-items:center;position:relative;z-index:2}
+.ticker-track{flex:1;overflow:hidden;position:relative;mask-image:linear-gradient(to right, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%);-webkit-mask-image:linear-gradient(to right, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)}
+.ticker-inner{display:flex;white-space:nowrap;animation:scroll 55s linear infinite}
+.ti{padding:0 28px;font-size:11px;font-family:var(--mono);color:var(--text2)}
+.ti b{color:var(--text)}
+.ti .ts{color:var(--green)}
+.ti .tr{color:var(--yellow)}
+.ti .tl{color:var(--red)}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── DATABASE PAGE ── */
+.db-toolbar{padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.db-search{flex:1;min-width:200px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px}
+.db-search:focus{outline:none;border-color:var(--accent)}
+.db-search::placeholder{color:var(--text3)}
+.db-fsel{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;cursor:pointer}
+.db-fsel:focus{outline:none;border-color:var(--accent)}
+.db-export{display:flex;gap:6px}
+.exp-btn{padding:7px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.exp-btn:hover{border-color:var(--accent);color:var(--accent)}
+.exp-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.exp-btn.primary:hover{background:var(--accent2)}
+.db-stats{display:flex;gap:16px;padding:10px 24px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.db-stat{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.db-stat span{color:var(--accent);font-weight:600}
+table{width:100%;border-collapse:collapse}
+.tbl-wrap{overflow-x:auto;padding:0 24px 60px}
+thead th{text-align:left;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1.5px solid var(--border);white-space:nowrap;cursor:pointer}
+thead th:hover{color:var(--text)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--bg2)}
+tbody tr.hidden{display:none}
+td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
+.cn{font-weight:600;color:var(--text);font-size:13px}
+.cc{font-size:11px;color:var(--text3)}
+.url-a{font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;word-break:break-all;display:block}
+.url-a:hover{text-decoration:underline}
+.url-a.sec{color:var(--text3);font-size:10px}
+.spath{font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid rgba(45,158,92,.2);border-radius:4px;padding:1px 5px;display:inline-block}
+.diff{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px}
+.d-easy{background:var(--green-bg);color:var(--green)}
+.d-med{background:var(--yellow-bg);color:var(--yellow)}
+.d-hard{background:var(--red-bg);color:var(--red)}
+.lbadge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600}
+.lb-el{background:var(--accent-soft);color:var(--accent)}
+.lb-ec{background:var(--green-bg);color:var(--green)}
+.lb-aba{background:var(--purple-bg);color:var(--purple)}
+.lb-bcl{background:var(--yellow-bg);color:var(--yellow)}
+.lb-nat{background:var(--red-bg);color:var(--red)}
+.lb-news{background:rgba(200,135,10,.1);color:var(--yellow)}
+.section-hd{padding:20px 24px 0;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px}
+.section-sub{font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:400;letter-spacing:.5px}
+
+@media(max-width:680px){
+  nav{padding:10px 14px}
+  .tr-header,.filter-bar,.db-toolbar,.t-area,.tbl-wrap{padding-left:14px;padding-right:14px}
+  .tc{grid-template-columns:34px 1fr;grid-template-rows:auto auto auto}
+  .tleague,.tpill,.tmeta{grid-column:2}
+  .tmeta{align-items:flex-start}
+  .stats-strip{flex-wrap:wrap}
+  .stat-cell{min-width:50%}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Euro<span>Ball</span> Moves</div>
+  <div class="tabs">
+    <button class="tab on" onclick="showPage('tracker',this)">🔴 Live Tracker</button>
+    <button class="tab" onclick="showPage('db',this)">📋 URL Database</button>
+  </div>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+      <span class="theme-icon" id="themeIcon">☀️</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     LIVE TRACKER PAGE
+══════════════════════════════════════════════ -->
+<div class="page on" id="p-tracker">
+
+  <div class="tr-header">
+    <div class="live-pill"><div class="live-dot"></div>Eurobasket</div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)">Transfer Tracker</div>
+    <div class="last-upd" id="lastUpd">Not yet fetched</div>
+    <button class="fetch-btn fetch-btn-new" id="fetchNewBtn" onclick="fetchNew()">
+      <span id="fetchNewIco">🆕</span>&nbsp;Novo
+    </button>
+    <button class="fetch-btn" id="fetchBtn" onclick="fetchAll()">
+      <span id="fetchIco">↻</span>&nbsp;Osveži bazo
+    </button>
+  </div>
+
+  <!-- ticker -->
+  <div class="ticker"><div class="ticker-lbl">Latest</div><div class="ticker-track"><div class="ticker-inner" id="ticker">
+    <span class="ti"><span class="ts">SIGNED</span> Saben Lee → Zalgiris · <span class="ts">SIGNED</span> Maxwell Lewis → Zalgiris · <span class="ts">SIGNED</span> Nick Calathes → PAOK · <span class="ts">SIGNED</span> Jaleen Smith → Hapoel Jerusalem · <span class="ts">SIGNED</span> Mike James → Barcelona · <span class="ts">SIGNED</span> Matthew Hurt stays at Cedevita Olimpija</span>
+    <span class="ti"><span class="tl">LEFT</span> Alec Peters departs Olympiacos · <span class="tl">LEFT</span> Duane Washington leaves Partizan · <span class="tl">LEFT</span> Devon Daniels leaves Hamburg · <span class="tl">LEFT</span> Sid-Marlon Theis departs Rostock after 6 years · <span class="tl">LEFT</span> Danijel Jusup exits Zadar</span>
+    <span class="ti"><span class="ts">EXTENDED</span> Jordan Loyd stays at Efes · <span class="ts">EXTENDED</span> Kobi Simmons at Baskonia through 2028 · <span class="ts">EXTENDED</span> Dragan Milosavljević at Igokea · <span class="ts">EXTENDED</span> Paul Zipser stays at Heidelberg · <span class="ts">EXTENDED</span> Axel Bouteille at Budućnost</span>
+    <span class="ti"><span class="ts">SIGNED</span> Ibi Watson → Ulm · <span class="ts">SIGNED</span> Jaylen Sims → Ulm · <span class="ts">SIGNED</span> Alex Richardson → Chemnitz · <span class="ts">SIGNED</span> Ranko Simović → Borac · <span class="ts">SIGNED</span> Jamiya Neal → FMP · <span class="ts">SIGNED</span> Marko Kovačević → FMP</span>
+    <span class="ti"><span class="tr">RUMOR</span> Partizan targeting Kevarrius Hayes · <span class="tr">RUMOR</span> Bayern Munich eyeing Bamberg coach Gavel · <span class="tr">RUMOR</span> Sasha Djordjevic close to Bahcesehir · <span class="tr">RUMOR</span> Ergin Ataman leaves Panathinaikos</span>
+    <span class="ti"><span class="ts">SIGNED</span> Saben Lee → Zalgiris · <span class="ts">SIGNED</span> Maxwell Lewis → Zalgiris · <span class="ts">SIGNED</span> Nick Calathes → PAOK · <span class="ts">SIGNED</span> Jaleen Smith → Hapoel Jerusalem · <span class="ts">SIGNED</span> Mike James → Barcelona · <span class="ts">SIGNED</span> Matthew Hurt stays at Cedevita Olimpija</span>
+    <span class="ti"><span class="tl">LEFT</span> Alec Peters departs Olympiacos · <span class="tl">LEFT</span> Duane Washington leaves Partizan · <span class="tl">LEFT</span> Devon Daniels leaves Hamburg · <span class="tl">LEFT</span> Sid-Marlon Theis departs Rostock after 6 years · <span class="tl">LEFT</span> Danijel Jusup exits Zadar</span>
+    <span class="ti"><span class="ts">EXTENDED</span> Jordan Loyd stays at Efes · <span class="ts">EXTENDED</span> Kobi Simmons at Baskonia through 2028 · <span class="ts">EXTENDED</span> Dragan Milosavljević at Igokea · <span class="ts">EXTENDED</span> Paul Zipser stays at Heidelberg · <span class="ts">EXTENDED</span> Axel Bouteille at Budućnost</span>
+    <span class="ti"><span class="ts">SIGNED</span> Ibi Watson → Ulm · <span class="ts">SIGNED</span> Jaylen Sims → Ulm · <span class="ts">SIGNED</span> Alex Richardson → Chemnitz · <span class="ts">SIGNED</span> Ranko Simović → Borac · <span class="ts">SIGNED</span> Jamiya Neal → FMP · <span class="ts">SIGNED</span> Marko Kovačević → FMP</span>
+    <span class="ti"><span class="tr">RUMOR</span> Partizan targeting Kevarrius Hayes · <span class="tr">RUMOR</span> Bayern Munich eyeing Bamberg coach Gavel · <span class="tr">RUMOR</span> Sasha Djordjevic close to Bahcesehir · <span class="tr">RUMOR</span> Ergin Ataman leaves Panathinaikos</span>
+  </div></div></div>
+
+  <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+
+  <!-- stats -->
+  <div class="stats-strip">
+    <div class="stat-cell"><div class="sn" id="sTotal">—</div><div class="sl">Total Moves</div></div>
+    <div class="stat-cell cg"><div class="sn" id="sSigned">—</div><div class="sl">Signed</div></div>
+    <div class="stat-cell cy"><div class="sn" id="sRumor">—</div><div class="sl">Rumors</div></div>
+    <div class="stat-cell cr"><div class="sn" id="sLeft">—</div><div class="sl">Left</div></div>
+    <div class="stat-cell cp"><div class="sn" id="sExtended">—</div><div class="sl">Extended</div></div>
+  </div>
+
+  <!-- filters -->
+  <div class="filter-bar">
+    <div class="sw">
+      <span class="sw-icon">🔍</span>
+      <input class="fsearch" id="fSearch" placeholder="Search player, club, league…" oninput="renderT()"/>
+    </div>
+    <select class="fsel" id="fLeague" onchange="renderT()">
+      <option value="">All Leagues</option>
+      <option>EuroLeague</option><option>EuroCup</option><option>ABA League</option>
+      <option>BCL</option><option>FIBA Europe Cup</option><option>VTB</option><option>BNXT</option>
+      <option>ACB</option><option>Primera FEB</option><option>Pro A</option><option>Pro B</option>
+      <option>Lega</option><option>Serie A2</option><option>BBL</option><option>ProA Germany</option>
+      <option>GBL</option><option>BSL</option><option>Turkish BSL</option><option>TBL</option><option>Greek A1</option><option>Israeli BSL</option>
+      <option>LKL</option><option>KLS</option><option>HT Liga</option><option>SKL</option>
+      <option>PLK</option><option>Romanian LNB</option><option>Hungarian NB1</option><option>Croatian HKL</option><option>NBL Czech</option><option>NBIA Hungary</option>
+    </select>
+    <select class="fsel" id="fPos" onchange="renderT()">
+      <option value="">All Positions</option>
+      <option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option><option>coach</option>
+    </select>
+    <select class="fsel" id="fSrc" onchange="renderT()">
+      <option value="">All Sources</option>
+      <option>EuroLeague Official</option><option>EuroCup Official</option>
+      <option>BCL Official</option><option>ABA Liga Official</option>
+      <option>Sportando</option><option>Eurohoops</option><option>BasketNews</option>
+      <option>TalkBasket</option><option>RealGM</option><option>PBEurope</option>
+    </select>
+    <div class="sf-btns">
+      <button class="sfb a-all"  id="b-all"      onclick="setS('all')">All</button>
+      <button class="sfb"        id="b-signed"   onclick="setS('signed')">✅ Signed</button>
+      <button class="sfb"        id="b-rumor"    onclick="setS('rumor')">💬 Rumor</button>
+      <button class="sfb"        id="b-left"     onclick="setS('left')">🚪 Left</button>
+      <button class="sfb"        id="b-extended" onclick="setS('extended')">📋 Extended</button>
+      <button class="sfb"        id="b-roster"   onclick="setS('roster')">👥 Roster</button>
+    </div>
+  </div>
+
+  <!-- basketball balls loading bar — sits ABOVE results, not blocking them -->
+  <div class="loading-bar" id="loadingEl">
+    <div class="loading-top">
+      <div class="balls-row" id="ballsRow">
+        <div class="bball empty" id="ball0"></div>
+        <div class="bball empty" id="ball1"></div>
+        <div class="bball empty" id="ball2"></div>
+        <div class="bball empty" id="ball3"></div>
+        <div class="bball empty" id="ball4"></div>
+        <div class="bball empty" id="ball5"></div>
+        <div class="bball empty" id="ball6"></div>
+        <div class="bball empty" id="ball7"></div>
+        <div class="bball empty" id="ball8"></div>
+        <div class="bball empty" id="ball9"></div>
+      </div>
+      <div class="ld-src-top" id="ldSrc">Initialising…</div>
+      <div class="ld-pct" id="ldPct">0%</div>
+    </div>
+  </div>
+
+  <!-- main area — results render here while loading bar shows above -->
+  <div class="t-area">
+    <div id="errEl"></div>
+    <div class="init-prompt" id="initPr">
+      <div class="init-ico">🏀</div>
+      <div class="init-h">EuroBall Transfer Tracker</div>
+      <div class="init-p">
+        Baza prestopov iz <strong>Eurobasket.com</strong> — vsi potrjeni prestopi in seznami igralcev
+        po ligah. Uporabi iskalnik (igralec, klub, država) in filtre po statusu.
+        Gumb <strong>Osveži bazo</strong> znova naloži podatke, <strong>Novo</strong> pokaže samo prestope od zadnje osvežitve.
+      </div>
+    </div>
+    <div class="transfers" id="transfersEl"></div>
+    <div class="empty" id="emptyEl" style="display:none">
+      <div class="empty-ico">🏀</div>
+      <div class="empty-title">No moves match your filters</div>
+      <div>Try adjusting search or filters above.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DATABASE PAGE
+══════════════════════════════════════════════ -->
+<div class="page" id="p-db">
+  <div class="db-toolbar">
+    <input class="db-search" id="dbSearch" placeholder="Filter clubs, URLs, leagues…" oninput="filterDB()"/>
+    <select class="db-fsel" id="dbLeagueF" onchange="filterDB()">
+      <option value="">All categories</option>
+      <option value="EuroLeague">EuroLeague</option>
+      <option value="EuroCup">EuroCup</option>
+      <option value="ABA">ABA League</option>
+      <option value="BCL">BCL</option>
+              <option value="GBL">Greek GBL</option>
+              <option value="LKL">Lithuanian LKL</option>
+              <option value="Israeli BSL">Israeli BSL</option>
+              <option value="BNXT">BNXT</option>
+              <option value="PLK">Polish PLK</option>
+              <option value="Romanian LNB">Romanian LNB</option>
+              <option value="Hungarian NB1">Hungarian NB1</option>
+              <option value="Croatian HKL">Croatian HKL</option>
+              <option value="Turkish BSL">Turkish BSL</option>
+      <option value="VTB">VTB</option>
+      <option value="Spain">Spain</option>
+      <option value="France">France</option>
+      <option value="Italy">Italy</option>
+      <option value="Germany">Germany</option>
+      <option value="Turkey">Turkey</option>
+      <option value="Greece">Greece</option>
+      <option value="Israel">Israel</option>
+      <option value="Balkans">Balkans</option>
+      <option value="Lithuania">Lithuania</option>
+      <option value="News">News</option>
+    </select>
+    <select class="db-fsel" id="dbDiffF" onchange="filterDB()">
+      <option value="">All difficulties</option>
+      <option>Easy</option><option>Medium</option><option>Hard</option>
+    </select>
+    <div class="db-export">
+      <button class="exp-btn primary" onclick="exportJSON()">⬇ JSON</button>
+      <button class="exp-btn" onclick="exportCSV()">⬇ CSV</button>
+      <button class="exp-btn" onclick="exportPY()">⬇ Python</button>
+    </div>
+  </div>
+  <div class="db-stats">
+    <span class="db-stat">Total entries: <span id="dbTotal">0</span></span>
+    <span class="db-stat">Showing: <span id="dbVisible">0</span></span>
+    <span class="db-stat">Easy: <span id="dbEasy">0</span></span>
+    <span class="db-stat">Medium: <span id="dbMed">0</span></span>
+    <span class="db-stat">Hard: <span id="dbHard">0</span></span>
+  </div>
+  <div class="tbl-wrap"><table id="dbTable">
+    <thead><tr>
+      <th onclick="sortDB('league')">League ↕</th>
+      <th onclick="sortDB('name')">Club / Source ↕</th>
+      <th>Official Website</th>
+      <th>News / Transfers Path</th>
+      <th onclick="sortDB('diff')">Difficulty ↕</th>
+    </tr></thead>
+    <tbody id="dbBody"></tbody>
+  </table></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// PAGE SWITCHING
+// ═══════════════════════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('p-' + id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// DATABASE DATA — VERIFIED URLs
+// ═══════════════════════════════════════════════════════
+const DB = [
+  // ── LEAGUE OFFICIAL NEWS PAGES ──
+  {cat:'EuroLeague',  league:'EuroLeague',  name:'EuroLeague Official News',     url:'https://www.euroleaguebasketball.net/en/euroleague/news/', path:'/en/euroleague/news/',       diff:'Easy ⭐'},
+  {cat:'EuroCup',     league:'EuroCup',     name:'EuroCup Official News',         url:'https://www.euroleaguebasketball.net/eurocup/news/',     path:'/eurocup/news/',             diff:'Easy ⭐'},
+  {cat:'BCL',         league:'BCL',         name:'BCL Official News',             url:'https://www.championsleague.basketball/en/news/',        path:'/en/news/',                  diff:'Easy ⭐'},
+  {cat:'ABA',         league:'ABA League',  name:'ABA Liga News (page 1)',        url:'https://www.aba-liga.com/newslist/News/1/',              path:'/newslist/News/1/',           diff:'Easy ⭐'},
+  {cat:'ABA',         league:'ABA League',  name:'ABA Liga News (page 2)',        url:'https://www.aba-liga.com/newslist/News/2/',              path:'/newslist/News/2/',           diff:'Easy ⭐'},
+  {cat:'ABA',         league:'ABA League',  name:'ABA Liga Clubs News',          url:'https://www.aba-liga.com/newslist/Clubs/1/',             path:'/newslist/Clubs/1/',          diff:'Easy ⭐'},
+  {cat:'Germany',     league:'BBL',         name:'BBL / basketball-world.news',  url:'https://www.basketball-world.news',                     path:'/transferboerse',            diff:'Easy ⭐'},
+  {cat:'Spain',       league:'ACB',         name:'ACB Official News',             url:'https://www.acb.com/es/liga/noticias',                  path:'/es/liga/noticias',           diff:'Easy ⭐'},
+  {cat:'Spain',       league:'ACB',         name:'AS.com Baloncesto ACB',         url:'https://as.com/baloncesto/acb/',                        path:'/baloncesto/acb/',            diff:'Medium'},
+  {cat:'France',      league:'Pro A',       name:'bebasket.fr Betclic ELITE',     url:'https://www.bebasket.fr/ligue/betclic-elite',           path:'/ligue/betclic-elite',        diff:'Easy ⭐'},
+  {cat:'France',      league:'Pro A',       name:'bebasket.fr Transferts',        url:'https://www.bebasket.fr/ligue/betclic-elite/tableau-transferts', path:'/ligue/betclic-elite/tableau-transferts', diff:'Easy ⭐'},
+  {cat:'Italy',       league:'Lega',        name:'Lega Basket Official News',     url:'https://www.legabasket.it/news',                        path:'/news',                      diff:'Medium'},
+  {cat:'Italy',       league:'Lega',        name:'Pianeta Basket LBA',            url:'https://www.pianetabasket.com/legabasket-serie-a/',     path:'/legabasket-serie-a/',        diff:'Easy ⭐'},
+  {cat:'Greece',      league:'GBL',         name:'sport24.gr Basket League',      url:'https://www.sport24.gr/tag/basket-league/',            path:'/tag/basket-league/',         diff:'Medium (Greek)'},
+  {cat:'Turkey',      league:'Turkish BSL', name:'basketbolig.com BSL',           url:'https://basketbolig.com/kategori/basketbol-super-ligi', path:'/kategori/basketbol-super-ligi', diff:'Easy (Turkish)'},
+  {cat:'Turkey',      league:'Turkish BSL', name:'basketfaul.com.tr BSL',         url:'https://basketfaul.com.tr/category/turkiye/bsl/',       path:'/category/turkiye/bsl/',      diff:'Easy (Turkish)'},
+  {cat:'Romania',     league:'Romanian LNB',name:'baschetromania.ro',             url:'https://baschetromania.ro/',                            path:'/',                           diff:'Easy ⭐'},
+  {cat:'Poland',      league:'PLK',         name:'PLK Official News',             url:'https://plk.pl/aktualnosci',                           path:'/aktualnosci',                diff:'Easy ⭐'},
+  {cat:'Poland',      league:'PLK',         name:'super-basket.pl PLK',           url:'https://super-basket.pl/plk/',                         path:'/plk/',                       diff:'Easy (Polish)'},
+  {cat:'Hungary',     league:'Hungarian NB1',name:'bball1.hu NB1 Transfers',      url:'https://bball1.hu/atigazolasi-hirosszefoglalo-2026/',   path:'/atigazolasi-hirosszefoglalo-2026/', diff:'Medium (Hungarian)'},
+  {cat:'Hungary',     league:'Hungarian NB1',name:'bball1.hu',                    url:'https://bball1.hu/',                                   path:'/',                           diff:'Medium (Hungarian)'},
+  {cat:'Croatia',     league:'Croatian HKL',name:'basketball.hr',                 url:'https://basketball.hr/',                               path:'/',                           diff:'Medium (Croatian)'},
+  {cat:'Croatia',     league:'Croatian HKL',name:'jutarnji.hr Košarka',           url:'https://www.jutarnji.hr/sportske/kosarka/hrvatska-liga', path:'/sportske/kosarka/hrvatska-liga', diff:'Medium (Croatian)'},
+  {cat:'BNXT',        league:'BNXT',        name:'BNXT League News',              url:'https://bnxtleague.com/en/news',                        path:'/en/news',                    diff:'Hard (JS only)'},
+  {cat:'Lithuania',   league:'LKL',         name:'BasketNews LKL Transfer Hub',  url:'https://www.basketnews.lt/news-248448-basketnews-lkl-vasaros-turgus-atnaujinta-0618.html', path:'/naujienos.html', diff:'Medium (Lithuanian)'},
+  {cat:'Israel',      league:'Israeli BSL', name:'basket.co.il (English)',        url:'https://basket.co.il/archive.asp?typeID=1&lang=en',    path:'/archive.asp?typeID=1&lang=en', diff:'Easy ⭐'},
+  // ── NEWS AGGREGATORS ──
+  {cat:'News',        league:'News',        name:'Sportando',                     url:'https://sportando.basketball/en/',                      path:'/en/typology/official/',      diff:'Easy ⭐'},
+  {cat:'News',        league:'News',        name:'Eurohoops',                     url:'https://www.eurohoops.net/en/',                         path:'/en/trademarks/transfers/',   diff:'Easy ⭐'},
+  {cat:'News',        league:'News',        name:'TalkBasket',                    url:'https://www.talkbasket.net/transfers',                  path:'/transfers',                  diff:'Easy ⭐'},
+  {cat:'News',        league:'News',        name:'BasketNews.com (EL Tracker)',   url:'https://basketnews.com/news-248207-euroleague-transfer-market-2026-rosters-signings-rumors.html', path:'/', diff:'Easy ⭐'},
+  {cat:'News',        league:'News',        name:'Gigantes (Spain)',              url:'https://www.gigantes.com/liga-endesa/',                 path:'/liga-endesa/',               diff:'Easy (Spanish)'},
+  {cat:'News',        league:'News',        name:'AllStarBasket GBL Transfers',  url:'https://www.allstarbasket.gr/ellada/greek-basketball-league/transfer-market-oi-kiniseis-ton-14-omadon-tis-gbl', path:'/', diff:'Medium (Greek)'},
+  {cat:'News',        league:'News',        name:"RealGM Int'l Transactions",   url:'https://basketball.realgm.com/international/transactions', path:'/international/transactions', diff:'Easy ⭐'},
+  {cat:'News',        league:'News',        name:'Eurobasket.com BNXT Transfers',url:'https://www.eurobasket.com/BNXT-League/basketball-Transfers.aspx', path:'/BNXT-League/basketball-Transfers.aspx', diff:'Easy'},
+];
+
+// ═══════════════════════════════════════════════════════
+// DATABASE TABLE
+// ═══════════════════════════════════════════════════════
+let dbSort = {col:'league', dir:1};
+
+const BADGE_MAP = {
+  'EuroLeague':'lb-el','EuroCup':'lb-ec','ABA League':'lb-aba','BCL':'lb-bcl',
+  'BNXT':'lb-bcl','VTB':'lb-bcl','News':'lb-news',
+};
+function lbCls(l) { return BADGE_MAP[l] || 'lb-nat'; }
+
+function diffCls(d) {
+  if (d.startsWith('Easy')) return 'd-easy';
+  if (d.startsWith('Medium')) return 'd-med';
+  return 'd-hard';
+}
+
+function sortDB(col) {
+  if (dbSort.col === col) dbSort.dir *= -1;
+  else { dbSort.col = col; dbSort.dir = 1; }
+  filterDB();
+}
+
+function filterDB() {
+  const q = document.getElementById('dbSearch').value.toLowerCase();
+  const lf = document.getElementById('dbLeagueF').value;
+  const df = document.getElementById('dbDiffF').value;
+
+  const filtered = DB.filter(r => {
+    const txt = (r.name + r.league + r.cat + r.url + (r.city||'')).toLowerCase();
+    if (q && !txt.includes(q)) return false;
+    if (lf && r.cat !== lf) return false;
+    if (df && !r.diff.startsWith(df)) return false;
+    return true;
+  }).sort((a, b) => {
+    const av = (a[dbSort.col]||'').toLowerCase();
+    const bv = (b[dbSort.col]||'').toLowerCase();
+    return av < bv ? -dbSort.dir : av > bv ? dbSort.dir : 0;
+  });
+
+  const body = document.getElementById('dbBody');
+  body.innerHTML = filtered.map(r => `
+    <tr>
+      <td><span class="lbadge ${lbCls(r.league)}">${r.league}</span></td>
+      <td><div class="cn">${esc(r.name)}</div>${r.city ? `<div class="cc">${esc(r.city)}</div>` : ''}</td>
+      <td><a class="url-a" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.url.replace(/^https?:\/\//,''))}</a></td>
+      <td><span class="spath">${esc(r.path)}</span></td>
+      <td><span class="diff ${diffCls(r.diff)}">${esc(r.diff)}</span></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('dbTotal').textContent = DB.length;
+  document.getElementById('dbVisible').textContent = filtered.length;
+  document.getElementById('dbEasy').textContent = filtered.filter(r=>r.diff.startsWith('Easy')).length;
+  document.getElementById('dbMed').textContent = filtered.filter(r=>r.diff.startsWith('Medium')).length;
+  document.getElementById('dbHard').textContent = filtered.filter(r=>r.diff.startsWith('Hard')).length;
+}
+
+// Export
+function exportJSON() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}));
+  a.download = 'euroball-targets.json'; a.click();
+}
+function exportCSV() {
+  const h = 'category,league,name,city,url,news_path,difficulty\n';
+  const rows = DB.map(r => [r.cat,r.league,r.name,r.city||'',r.url,r.path,r.diff].map(v=>`"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));
+  a.download = 'euroball-targets.csv'; a.click();
+}
+function exportPY() {
+  const lines = ['SCRAPE_TARGETS = ['];
+  DB.forEach(r => lines.push(`  {"league":${JSON.stringify(r.league)},"name":${JSON.stringify(r.name)},"url":${JSON.stringify(r.url)},"path":${JSON.stringify(r.path)}},`));
+  lines.push(']');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));
+  a.download = 'scrape_targets.py'; a.click();
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE TRACKER
+// ═══════════════════════════════════════════════════════
+let allT = [], activeS = 'all', fetching = false;
+let EB_DATA = [];
+
+// ═══════════════════════════════════════════════════════
+// EUROBASKET-ONLY  —  edini vir je Eurobasket.com baza
+// (eurobasket.json), plus opcijska seed baza (transfers.json).
+// Brez RSS feedov in CORS proxyjev.
+// ═══════════════════════════════════════════════════════
+
+// Seed baza izklopljena — app uporablja IZKLJUCNO Eurobasket.
+let SEED_DATA = [];
+async function loadSeed() { SEED_DATA = []; }
+
+function buildSrcBar() { /* no-op: source bar removed */ }
+
+// "Osveži bazo": znova naloži celotno Eurobasket bazo (+ seed) iz datotek.
+async function fetchAll() {
+  if (fetching) return;
+  fetching = true;
+
+  const btn = document.getElementById('fetchBtn');
+  const ico = document.getElementById('fetchIco');
+  if (btn) btn.disabled = true;
+  if (ico) ico.classList.add('spin');
+
+  document.getElementById('initPr').style.display = 'none';
+  document.getElementById('loadingEl').style.display = 'block';
+  document.getElementById('errEl').innerHTML = '';
+  document.getElementById('transfersEl').innerHTML = '';
+  document.getElementById('emptyEl').style.display = 'none';
+  document.getElementById('progWrap').style.display = 'block';
+  updateBalls(0);
+
+  setLD('Nalagam Eurobasket bazo…');
+  updateBalls(20);
+  await Promise.all([loadSeed(), loadEurobasket()]);
+  updateBalls(70);
+
+  allT = [...SEED_DATA, ...EB_DATA];
+  dedup(); sortT(); renderT(); updateStats(); updateTicker();
+  updateBalls(100); await sleep(250);
+
+  document.getElementById('loadingEl').style.display = 'none';
+  document.getElementById('progWrap').style.display = 'none';
+  const t = new Date().toLocaleTimeString();
+  const upd = document.getElementById('lastUpd');
+  const ebMoves = EB_DATA.filter(t=>t.status!=='roster').length;
+  if (upd) upd.textContent = `Osveženo ${t} · ${ebMoves} prestopov · ${EB_DATA.length-ebMoves} igralcev`;
+
+  if (!EB_DATA.length) {
+    showErr('eurobasket.json ni najden ali je prazen. Najprej zaženi "Osvezi Eurobasket" skripto, da pripravi bazo poleg index.html.');
+  }
+
+  if (btn) btn.disabled = false;
+  if (ico) ico.classList.remove('spin');
+  fetching = false;
+}
+
+// Incremental: load only Eurobasket's "new since last snapshot" file,
+// produced by process_transfers.py (eurobasket_new.json). Marks those
+// rows 🆕, pins them to the top, and reports how many were added.
+async function fetchNew() {
+  if (fetching) return;
+  fetching = true;
+  const btn = document.getElementById('fetchNewBtn');
+  const ico = document.getElementById('fetchNewIco');
+  if (btn) btn.disabled = true;
+  if (ico) ico.classList.add('spin');
+  const upd = document.getElementById('lastUpd');
+  try {
+    const res = await fetch('eurobasket_new.json', {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const items = (data.items || []).map(t => ({...t, origin:'eurobasket', isNew:true}));
+    if (!items.length) {
+      if (upd) upd.textContent = `No new Eurobasket moves since last snapshot`;
+    } else {
+      // Clear previous isNew flags, then merge the fresh batch on top
+      allT.forEach(t => { if (t.isNew) t.isNew = false; });
+      const before = allT.length;
+      allT.push(...items);
+      dedup(); sortT();
+      const added = allT.length - before;
+      renderT(); updateStats(); updateTicker();
+      if (upd) upd.textContent = `🆕 +${added} new · ${data.newMoves||0} moves, ${data.newPlayers||0} players (snapshot ${(data.generated_at||'').slice(0,10)})`;
+    }
+  } catch(e) {
+    if (upd) upd.textContent = `Novo failed: ${e.message} — run the Mac script first`;
+    console.warn('fetchNew:', e.message);
+  }
+  if (btn) btn.disabled = false;
+  if (ico) ico.classList.remove('spin');
+  fetching = false;
+}
+
+function expandLeagues() { /* no-op kept for compatibility */ }
+
+function dedup() {
+  const byKey = new Map();
+  for (const t of allT) {
+    const base = `${(t.player||'').toLowerCase().trim()}-${(t.to||'').toLowerCase().trim()}`;
+    const k = t.origin === 'eurobasket'
+      ? `${base}-${(t.from||'').toLowerCase().trim()}-${(t.country||'').toLowerCase()}-${t.status}`
+      : base;
+    const existing = byKey.get(k);
+    // On collision prefer the entry flagged 🆕 so a fresh-snapshot row
+    // isn't dropped in favour of the older full-base copy.
+    if (!existing || (t.isNew && !existing.isNew)) byKey.set(k, t);
+  }
+  allT = [...byKey.values()];
+}
+function sortT() {
+  allT.sort((a,b) => {
+    if (!!b.isNew !== !!a.isNew) return (b.isNew?1:0) - (a.isNew?1:0);  // 🆕 first
+    const dc = (b.date||'').localeCompare(a.date||'');
+    if (dc) return dc;
+    const ord = {signed:0,rumor:1,extended:2,left:3,roster:4};
+    return (ord[a.status]||0) - (ord[b.status]||0);
+  });
+}
+
+function getF() {
+  const q = document.getElementById('fSearch').value.toLowerCase();
+  const l = document.getElementById('fLeague').value;
+  const p = document.getElementById('fPos').value;
+  const s = document.getElementById('fSrc').value;
+  return allT.filter(t => {
+    // Roster entries (Eurobasket squad lists) are hidden unless the user
+    // explicitly picks the Roster filter or types a search query — otherwise
+    // 10k+ roster rows would bury the actual transfer news.
+    if (t.status === 'roster' && activeS !== 'roster' && !q) return false;
+    if (activeS !== 'all' && t.status !== activeS) return false;
+    if (l && !t.league.toLowerCase().includes(l.toLowerCase())) return false;
+    if (p && t.pos !== p) return false;
+    if (s && t.source_name !== s) return false;
+    if (q) {
+      const h = `${t.player} ${t.from} ${t.to} ${t.league} ${t.summary} ${t.nat||''} ${t.country||''}`.toLowerCase();
+      if (!h.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderT() {
+  const fAll = getF();
+  const el = document.getElementById('transfersEl');
+  const emp = document.getElementById('emptyEl');
+  if (!allT.length) { el.innerHTML=''; emp.style.display='none'; return; }
+  if (!fAll.length) { el.innerHTML=''; emp.style.display='block'; return; }
+  emp.style.display = 'none';
+
+  // Cap DOM size — rendering 10k+ roster rows at once freezes the page.
+  const CAP = 400;
+  const capped = fAll.length > CAP;
+  const f = capped ? fAll.slice(0, CAP) : fAll;
+
+  const groups = {};
+  f.forEach(t => { const d=t.date||'Unknown'; if(!groups[d]) groups[d]=[]; groups[d].push(t); });
+  const dates = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+
+  let html = dates.map(d => {
+    const lbl = fmtGroupDate(d);
+    const cards = groups[d].map(t => cardHTML(t)).join('');
+    return `<div class="group-hd">${lbl}<span class="g-cnt">${groups[d].length}</span></div>${cards}`;
+  }).join('');
+
+  if (capped) {
+    html += `<div class="group-hd" style="color:var(--accent);border-color:var(--accent)">Showing first ${CAP} of ${fAll.length} — refine with search or filters<span class="g-cnt">${fAll.length}</span></div>`;
+  }
+  el.innerHTML = html;
+
+  updateStats(fAll);
+}
+
+function fmtGroupDate(d) {
+  if (!d || d==='Unknown') return 'Recent';
+  try {
+    const dt = new Date(d), today = new Date();
+    const diff = Math.floor((today-dt)/86400000);
+    if (diff===0) return 'Today';
+    if (diff===1) return 'Yesterday';
+    if (diff<7) return `${diff} days ago`;
+    return dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  } catch { return d; }
+}
+
+function cardHTML(t) {
+  const ini = t.player.split(' ').filter(w=>w.length>1).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+  const pill = {signed:'<span class="tpill p-signed">✓ SIGNED</span>',rumor:'<span class="tpill p-rumor">💬 RUMOR</span>',left:'<span class="tpill p-left">↩ LEFT</span>',extended:'<span class="tpill p-extended">⟳ EXTENDED</span>',roster:'<span class="tpill p-roster">👥 ROSTER</span>'}[t.status]||'';
+  const host = (() => { try { return new URL(t.source_url).hostname.replace('www.',''); } catch { return t.source_name; } })();
+  const fmtDate = (() => { try { return new Date(t.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); } catch { return t.date||''; } })();
+  return `<div class="tc s-${t.status}${t.isNew?' is-new':''}">
+    <div class="av">${esc(ini)}</div>
+    <div>
+      <div class="tp">${t.isNew?'<span class="new-badge">NOVO</span> ':''}${esc(t.player)} <span class="tpos">${esc(t.pos)}</span></div>
+      <div class="tmv"><span class="tf">${esc(t.from)}</span><span class="ta">→</span><span class="tt">${esc(t.to)}</span></div>
+      ${t.summary?`<div class="tsum">${esc(t.summary)}</div>`:''}
+    </div>
+    <span class="tleague">${esc(t.league)}</span>
+    ${pill}
+    <div class="tmeta">
+      <div class="tdate">${fmtDate}</div>
+      ${t.source_url ? `<a class="tsrc" href="${esc(t.source_url)}" target="_blank" rel="noopener" title="${esc(t.source_url)}">${esc(host)}</a>` : `<span class="tsrc" style="color:var(--text3)">${esc(t.source_name)}</span>`}
+    </div>
+  </div>`;
+}
+
+function setS(s) {
+  activeS = s;
+  ['all','signed','rumor','left','extended','roster'].forEach(id => {
+    document.getElementById('b-'+id).className = 'sfb';
+    if (id===s) document.getElementById('b-'+id).classList.add('a-'+s);
+  });
+  renderT();
+}
+
+function updateStats(f) {
+  const data = f || getF();
+  document.getElementById('sTotal').textContent = data.length || '—';
+  document.getElementById('sSigned').textContent = data.filter(t=>t.status==='signed').length || '—';
+  document.getElementById('sRumor').textContent = data.filter(t=>t.status==='rumor').length || '—';
+  document.getElementById('sLeft').textContent = data.filter(t=>t.status==='left').length || '—';
+  document.getElementById('sExtended').textContent = data.filter(t=>t.status==='extended').length || '—';
+}
+
+function updateTicker() {
+  if (!allT.length) return;
+  const items = allT.slice(0,12).map(t => {
+    const cls = t.status==='signed'?'ts':t.status==='rumor'?'tr':'tl';
+    const v = {signed:'signs with',rumor:'linked to',left:'leaves',extended:'extends at'}[t.status];
+    return `<span class="ti"><b>${esc(t.player)}</b> <span class="${cls}">${v}</span> ${esc(t.to)} · ${esc(t.league)}</span>`;
+  }).join('');
+  document.getElementById('ticker').innerHTML = items + items;
+}
+
+function setDot(id, state) {
+  const el = document.getElementById('d-'+id);
+  if (!el) return;
+  el.className = 'src-dot ' + state;
+}
+function setLD(txt) {
+  const el = document.getElementById('ldSrc');
+  if (el) el.textContent = txt;
+}
+function setProg(pct) {
+  document.getElementById('progBar').style.width = pct+'%';
+  const pctEl = document.getElementById('ldPct');
+  if (pctEl) pctEl.textContent = Math.round(pct)+'%';
+}
+function updateBalls(pct) {
+  // 10 balls: each ball lights up when we pass its 10% threshold
+  // 100% = all 10 lit, 50% = 5 lit, etc.
+  const lit = Math.round(pct / 10); // 0..10
+  for (let i = 0; i < 10; i++) {
+    const b = document.getElementById('ball'+i);
+    if (!b) continue;
+    if (i < lit) {
+      b.classList.remove('empty','active');
+    } else if (i === lit) {
+      b.classList.add('active');
+      b.classList.remove('empty');
+    } else {
+      b.classList.add('empty');
+      b.classList.remove('active');
+    }
+  }
+}
+function showErr(msg) { document.getElementById('errEl').innerHTML = `<div class="error-box"><div><div class="err-title">⚠️ Fetch incomplete</div><div class="err-msg">${msg}</div></div></div>`; }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Init
+filterDB();
+buildSrcBar();
+
+let EB_DATA_loaded = false;
+async function loadEurobasket() {
+  try {
+    const res = await fetch('eurobasket.json', {cache:'no-store'});
+    if (res.ok) {
+      const data = await res.json();
+      EB_DATA = (data.items || []).map(t => ({...t, origin:'eurobasket'}));
+    }
+  } catch(e) { console.warn('eurobasket.json not loaded:', e.message); }
+}
+
+// Load the verified base + Eurobasket database, show immediately.
+(async () => {
+  await Promise.all([loadSeed(), loadEurobasket()]);
+  allT = [...SEED_DATA, ...EB_DATA];
+  dedup(); sortT(); renderT(); updateStats(); updateTicker();
+  const upd = document.getElementById('lastUpd');
+  const ebMoves = EB_DATA.filter(t=>t.status!=='roster').length;
+  if (upd) upd.textContent = `${ebMoves} prestopov · ${EB_DATA.length-ebMoves} igralcev · vir: Eurobasket`;
+})();
+
+// Theme
+let isDark = false;
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isDark ? 'Dark' : 'Light';
+}
+</script>
+</body>
+</html>
