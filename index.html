@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EuroBall — Verified Scrape Targets + Live Tracker</title>
+<title>EuroBall — Prestopi evropske košarke</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -83,8 +83,8 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 
 /* ── TRACKER HEADER ── */
 .tr-header{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.live-pill{display:flex;align-items:center;gap:5px;background:var(--green-bg);border:1px solid var(--green);border-color:rgba(45,158,92,.3);border-radius:99px;padding:3px 10px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.5px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+.source-pill{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:4px 11px;font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:.3px;white-space:nowrap}
+.source-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 .fetch-btn{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(224,92,42,.25)}
 .fetch-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(224,92,42,.35)}
@@ -154,6 +154,8 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 .tc.s-extended{border-left:3px solid var(--purple)}
 .tc.s-roster{border-left:3px solid var(--border2)}
 .av{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0}
+.tc.s-signed .av{background:var(--green-bg);color:var(--green);border-color:rgba(45,158,92,.3)}
+.tc.s-roster .av{background:var(--bg3);color:var(--text3);border-color:var(--border2)}
 .tp{font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tpos{font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--bg3);border-radius:4px;padding:1px 6px;border:1px solid var(--border)}
 .tmv{display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap}
@@ -212,7 +214,8 @@ a.vbadge:hover{filter:brightness(1.1);text-decoration:underline}
 .ticker-lbl{flex-shrink:0;background:var(--accent);color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:0 10px;height:100%;display:flex;align-items:center;position:relative;z-index:2}
 .ticker-track{flex:1;overflow:hidden;position:relative;mask-image:linear-gradient(to right, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%);-webkit-mask-image:linear-gradient(to right, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)}
 .ticker-inner{display:flex;white-space:nowrap;animation:scroll 55s linear infinite}
-.ti{padding:0 28px;font-size:11px;font-family:var(--mono);color:var(--text2)}
+.ti{padding:0 14px;font-size:11px;font-family:var(--mono);color:var(--text2)}
+.ti-sep{color:var(--text3);opacity:.5}
 .ti b{color:var(--text)}
 .ti .ts{color:var(--green)}
 .ti .tr{color:var(--yellow)}
@@ -268,23 +271,25 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
   .tc{grid-template-columns:34px 1fr;grid-template-rows:auto auto auto}
   .tleague,.tpill,.tmeta{grid-column:2}
   .tmeta{align-items:flex-start}
-  .stats-strip{flex-wrap:wrap}
-  .stat-cell{min-width:50%}
+  .stats-strip{flex-wrap:nowrap}
+  .stat-cell{min-width:0;padding:8px 6px}
+  .sn{font-size:17px}
+  .sl{font-size:8.5px;letter-spacing:.2px}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="logo">Euro<span>Ball</span> Moves</div>
+  <div class="logo">Euro<span>Ball</span></div>
   <div class="tabs">
-    <button class="tab on" onclick="showPage('tracker',this)">🔴 Live Tracker</button>
-    <button class="tab" onclick="showPage('db',this)">📋 URL Database</button>
+    <button class="tab on" onclick="showPage('tracker',this)">Prestopi</button>
+    <button class="tab" onclick="showPage('db',this)">Viri</button>
   </div>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
       <span class="theme-icon" id="themeIcon">☀️</span>
-      <span id="themeLabel">Light</span>
+      <span id="themeLabel">Svetlo</span>
     </button>
   </div>
 </nav>
@@ -295,9 +300,8 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
 <div class="page on" id="p-tracker">
 
   <div class="tr-header">
-    <div class="live-pill"><div class="live-dot"></div>Eurobasket</div>
-    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)">Transfer Tracker</div>
-    <div class="last-upd" id="lastUpd">Not yet fetched</div>
+    <div class="source-pill"><div class="source-dot"></div>Vir: Eurobasket</div>
+    <div class="last-upd" id="lastUpd">Nalagam…</div>
     <button class="fetch-btn fetch-btn-new" id="fetchNewBtn" onclick="fetchNew()">
       <span id="fetchNewIco">🆕</span>&nbsp;Novo
     </button>
@@ -307,38 +311,26 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
   </div>
 
   <!-- ticker -->
-  <div class="ticker"><div class="ticker-lbl">Latest</div><div class="ticker-track"><div class="ticker-inner" id="ticker">
-    <span class="ti"><span class="ts">SIGNED</span> Saben Lee → Zalgiris · <span class="ts">SIGNED</span> Maxwell Lewis → Zalgiris · <span class="ts">SIGNED</span> Nick Calathes → PAOK · <span class="ts">SIGNED</span> Jaleen Smith → Hapoel Jerusalem · <span class="ts">SIGNED</span> Mike James → Barcelona · <span class="ts">SIGNED</span> Matthew Hurt stays at Cedevita Olimpija</span>
-    <span class="ti"><span class="tl">LEFT</span> Alec Peters departs Olympiacos · <span class="tl">LEFT</span> Duane Washington leaves Partizan · <span class="tl">LEFT</span> Devon Daniels leaves Hamburg · <span class="tl">LEFT</span> Sid-Marlon Theis departs Rostock after 6 years · <span class="tl">LEFT</span> Danijel Jusup exits Zadar</span>
-    <span class="ti"><span class="ts">EXTENDED</span> Jordan Loyd stays at Efes · <span class="ts">EXTENDED</span> Kobi Simmons at Baskonia through 2028 · <span class="ts">EXTENDED</span> Dragan Milosavljević at Igokea · <span class="ts">EXTENDED</span> Paul Zipser stays at Heidelberg · <span class="ts">EXTENDED</span> Axel Bouteille at Budućnost</span>
-    <span class="ti"><span class="ts">SIGNED</span> Ibi Watson → Ulm · <span class="ts">SIGNED</span> Jaylen Sims → Ulm · <span class="ts">SIGNED</span> Alex Richardson → Chemnitz · <span class="ts">SIGNED</span> Ranko Simović → Borac · <span class="ts">SIGNED</span> Jamiya Neal → FMP · <span class="ts">SIGNED</span> Marko Kovačević → FMP</span>
-    <span class="ti"><span class="tr">RUMOR</span> Partizan targeting Kevarrius Hayes · <span class="tr">RUMOR</span> Bayern Munich eyeing Bamberg coach Gavel · <span class="tr">RUMOR</span> Sasha Djordjevic close to Bahcesehir · <span class="tr">RUMOR</span> Ergin Ataman leaves Panathinaikos</span>
-    <span class="ti"><span class="ts">SIGNED</span> Saben Lee → Zalgiris · <span class="ts">SIGNED</span> Maxwell Lewis → Zalgiris · <span class="ts">SIGNED</span> Nick Calathes → PAOK · <span class="ts">SIGNED</span> Jaleen Smith → Hapoel Jerusalem · <span class="ts">SIGNED</span> Mike James → Barcelona · <span class="ts">SIGNED</span> Matthew Hurt stays at Cedevita Olimpija</span>
-    <span class="ti"><span class="tl">LEFT</span> Alec Peters departs Olympiacos · <span class="tl">LEFT</span> Duane Washington leaves Partizan · <span class="tl">LEFT</span> Devon Daniels leaves Hamburg · <span class="tl">LEFT</span> Sid-Marlon Theis departs Rostock after 6 years · <span class="tl">LEFT</span> Danijel Jusup exits Zadar</span>
-    <span class="ti"><span class="ts">EXTENDED</span> Jordan Loyd stays at Efes · <span class="ts">EXTENDED</span> Kobi Simmons at Baskonia through 2028 · <span class="ts">EXTENDED</span> Dragan Milosavljević at Igokea · <span class="ts">EXTENDED</span> Paul Zipser stays at Heidelberg · <span class="ts">EXTENDED</span> Axel Bouteille at Budućnost</span>
-    <span class="ti"><span class="ts">SIGNED</span> Ibi Watson → Ulm · <span class="ts">SIGNED</span> Jaylen Sims → Ulm · <span class="ts">SIGNED</span> Alex Richardson → Chemnitz · <span class="ts">SIGNED</span> Ranko Simović → Borac · <span class="ts">SIGNED</span> Jamiya Neal → FMP · <span class="ts">SIGNED</span> Marko Kovačević → FMP</span>
-    <span class="ti"><span class="tr">RUMOR</span> Partizan targeting Kevarrius Hayes · <span class="tr">RUMOR</span> Bayern Munich eyeing Bamberg coach Gavel · <span class="tr">RUMOR</span> Sasha Djordjevic close to Bahcesehir · <span class="tr">RUMOR</span> Ergin Ataman leaves Panathinaikos</span>
-  </div></div></div>
+  <div class="ticker"><div class="ticker-lbl">Najnovejše</div><div class="ticker-track"><div class="ticker-inner" id="ticker"></div></div></div>
 
   <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
 
   <!-- stats -->
   <div class="stats-strip">
-    <div class="stat-cell"><div class="sn" id="sTotal">—</div><div class="sl">Total Moves</div></div>
-    <div class="stat-cell cg"><div class="sn" id="sSigned">—</div><div class="sl">Signed</div></div>
-    <div class="stat-cell cy"><div class="sn" id="sRumor">—</div><div class="sl">Rumors</div></div>
-    <div class="stat-cell cr"><div class="sn" id="sLeft">—</div><div class="sl">Left</div></div>
-    <div class="stat-cell cp"><div class="sn" id="sExtended">—</div><div class="sl">Extended</div></div>
+    <div class="stat-cell"><div class="sn" id="sTotal">—</div><div class="sl">Prestopi</div></div>
+    <div class="stat-cell cg"><div class="sn" id="sConfirmed">—</div><div class="sl">Potrjeni</div></div>
+    <div class="stat-cell cy"><div class="sn" id="sLeagues">—</div><div class="sl">Lige</div></div>
+    <div class="stat-cell cp"><div class="sn" id="sPlayers">—</div><div class="sl">Igralci</div></div>
   </div>
 
   <!-- filters -->
   <div class="filter-bar">
     <div class="sw">
       <span class="sw-icon">🔍</span>
-      <input class="fsearch" id="fSearch" placeholder="Search player, club, league…" oninput="renderT()"/>
+      <input class="fsearch" id="fSearch" placeholder="Išči igralca, klub, ligo…" oninput="renderT()"/>
     </div>
     <select class="fsel" id="fLeague" onchange="renderT()">
-      <option value="">All Leagues</option>
+      <option value="">Vse lige</option>
       <option>EuroLeague</option><option>EuroCup</option><option>ABA League</option>
       <option>BCL</option><option>FIBA Europe Cup</option><option>VTB</option><option>BNXT</option>
       <option>ACB</option><option>Primera FEB</option><option>Pro A</option><option>Pro B</option>
@@ -348,23 +340,13 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
       <option>PLK</option><option>Romanian LNB</option><option>Hungarian NB1</option><option>Croatian HKL</option><option>NBL Czech</option><option>NBIA Hungary</option>
     </select>
     <select class="fsel" id="fPos" onchange="renderT()">
-      <option value="">All Positions</option>
+      <option value="">Vse pozicije</option>
       <option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option><option>coach</option>
     </select>
-    <select class="fsel" id="fSrc" onchange="renderT()">
-      <option value="">All Sources</option>
-      <option>EuroLeague Official</option><option>EuroCup Official</option>
-      <option>BCL Official</option><option>ABA Liga Official</option>
-      <option>Sportando</option><option>Eurohoops</option><option>BasketNews</option>
-      <option>TalkBasket</option><option>RealGM</option><option>PBEurope</option>
-    </select>
     <div class="sf-btns">
-      <button class="sfb a-all"  id="b-all"      onclick="setS('all')">All</button>
-      <button class="sfb"        id="b-signed"   onclick="setS('signed')">✅ Signed</button>
-      <button class="sfb"        id="b-rumor"    onclick="setS('rumor')">💬 Rumor</button>
-      <button class="sfb"        id="b-left"     onclick="setS('left')">🚪 Left</button>
-      <button class="sfb"        id="b-extended" onclick="setS('extended')">📋 Extended</button>
-      <button class="sfb"        id="b-roster"   onclick="setS('roster')">👥 Roster</button>
+      <button class="sfb a-all"  id="b-all"      onclick="setS('all')">Vsi</button>
+      <button class="sfb"        id="b-signed"   onclick="setS('signed')">✅ Prestopi</button>
+      <button class="sfb"        id="b-roster"   onclick="setS('roster')">👥 Igralci</button>
     </div>
   </div>
 
@@ -383,7 +365,7 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
         <div class="bball empty" id="ball8"></div>
         <div class="bball empty" id="ball9"></div>
       </div>
-      <div class="ld-src-top" id="ldSrc">Initialising…</div>
+      <div class="ld-src-top" id="ldSrc">Začenjam…</div>
       <div class="ld-pct" id="ldPct">0%</div>
     </div>
   </div>
@@ -393,18 +375,16 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
     <div id="errEl"></div>
     <div class="init-prompt" id="initPr">
       <div class="init-ico">🏀</div>
-      <div class="init-h">EuroBall Transfer Tracker</div>
+      <div class="init-h">EuroBall — Prestopi</div>
       <div class="init-p">
-        Baza prestopov iz <strong>Eurobasket.com</strong> — vsi potrjeni prestopi in seznami igralcev
-        po ligah. Uporabi iskalnik (igralec, klub, država) in filtre po statusu.
-        Gumb <strong>Osveži bazo</strong> znova naloži podatke, <strong>Novo</strong> pokaže samo prestope od zadnje osvežitve.
+        Baza prestopov evropske košarke iz Eurobasket.com. Naloži podatke z gumbom <strong>Osveži bazo</strong>.
       </div>
     </div>
     <div class="transfers" id="transfersEl"></div>
     <div class="empty" id="emptyEl" style="display:none">
-      <div class="empty-ico">🏀</div>
-      <div class="empty-title">No moves match your filters</div>
-      <div>Try adjusting search or filters above.</div>
+      <div class="empty-ico">🔍</div>
+      <div class="empty-title">Ni zadetkov za izbrane filtre</div>
+      <div>Poskusi spremeniti iskanje ali filtre.</div>
     </div>
   </div>
 </div>
@@ -414,9 +394,9 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
 ══════════════════════════════════════════════ -->
 <div class="page" id="p-db">
   <div class="db-toolbar">
-    <input class="db-search" id="dbSearch" placeholder="Filter clubs, URLs, leagues…" oninput="filterDB()"/>
+    <input class="db-search" id="dbSearch" placeholder="Filtriraj klube, vire, lige…" oninput="filterDB()"/>
     <select class="db-fsel" id="dbLeagueF" onchange="filterDB()">
-      <option value="">All categories</option>
+      <option value="">Vse kategorije</option>
       <option value="EuroLeague">EuroLeague</option>
       <option value="EuroCup">EuroCup</option>
       <option value="ABA">ABA League</option>
@@ -443,7 +423,7 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
       <option value="News">News</option>
     </select>
     <select class="db-fsel" id="dbDiffF" onchange="filterDB()">
-      <option value="">All difficulties</option>
+      <option value="">Vse zahtevnosti</option>
       <option>Easy</option><option>Medium</option><option>Hard</option>
     </select>
     <div class="db-export">
@@ -453,19 +433,19 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
     </div>
   </div>
   <div class="db-stats">
-    <span class="db-stat">Total entries: <span id="dbTotal">0</span></span>
-    <span class="db-stat">Showing: <span id="dbVisible">0</span></span>
-    <span class="db-stat">Easy: <span id="dbEasy">0</span></span>
-    <span class="db-stat">Medium: <span id="dbMed">0</span></span>
-    <span class="db-stat">Hard: <span id="dbHard">0</span></span>
+    <span class="db-stat">Vseh vnosov: <span id="dbTotal">0</span></span>
+    <span class="db-stat">Prikazanih: <span id="dbVisible">0</span></span>
+    <span class="db-stat">Lahko: <span id="dbEasy">0</span></span>
+    <span class="db-stat">Srednje: <span id="dbMed">0</span></span>
+    <span class="db-stat">Težko: <span id="dbHard">0</span></span>
   </div>
   <div class="tbl-wrap"><table id="dbTable">
     <thead><tr>
-      <th onclick="sortDB('league')">League ↕</th>
-      <th onclick="sortDB('name')">Club / Source ↕</th>
-      <th>Official Website</th>
-      <th>News / Transfers Path</th>
-      <th onclick="sortDB('diff')">Difficulty ↕</th>
+      <th onclick="sortDB('league')">Liga ↕</th>
+      <th onclick="sortDB('name')">Klub / vir ↕</th>
+      <th>Uradna stran</th>
+      <th>Pot do novic / prestopov</th>
+      <th onclick="sortDB('diff')">Zahtevnost ↕</th>
     </tr></thead>
     <tbody id="dbBody"></tbody>
   </table></div>
@@ -732,7 +712,6 @@ function getF() {
   const q = document.getElementById('fSearch').value.toLowerCase();
   const l = document.getElementById('fLeague').value;
   const p = document.getElementById('fPos').value;
-  const s = document.getElementById('fSrc').value;
   return allT.filter(t => {
     // Roster entries (Eurobasket squad lists) are hidden unless the user
     // explicitly picks the Roster filter or types a search query — otherwise
@@ -741,7 +720,6 @@ function getF() {
     if (activeS !== 'all' && t.status !== activeS) return false;
     if (l && !t.league.toLowerCase().includes(l.toLowerCase())) return false;
     if (p && t.pos !== p) return false;
-    if (s && t.source_name !== s) return false;
     if (q) {
       const h = `${t.player} ${t.from} ${t.to} ${t.league} ${t.summary} ${t.nat||''} ${t.country||''}`.toLowerCase();
       if (!h.includes(q)) return false;
@@ -774,7 +752,7 @@ function renderT() {
   }).join('');
 
   if (capped) {
-    html += `<div class="group-hd" style="color:var(--accent);border-color:var(--accent)">Showing first ${CAP} of ${fAll.length} — refine with search or filters<span class="g-cnt">${fAll.length}</span></div>`;
+    html += `<div class="group-hd" style="color:var(--accent);border-color:var(--accent)">Prikazanih prvih ${CAP} od ${fAll.length} — zoži z iskanjem ali filtri<span class="g-cnt">${fAll.length}</span></div>`;
   }
   el.innerHTML = html;
 
@@ -782,22 +760,24 @@ function renderT() {
 }
 
 function fmtGroupDate(d) {
-  if (!d || d==='Unknown') return 'Recent';
+  if (!d || d==='Unknown') return 'Prestopi';
   try {
     const dt = new Date(d), today = new Date();
+    if (isNaN(dt)) return 'Prestopi';
     const diff = Math.floor((today-dt)/86400000);
-    if (diff===0) return 'Today';
-    if (diff===1) return 'Yesterday';
-    if (diff<7) return `${diff} days ago`;
-    return dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    if (diff===0) return 'Danes';
+    if (diff===1) return 'Včeraj';
+    if (diff<7) return `Pred ${diff} dnevi`;
+    return dt.toLocaleDateString('sl',{weekday:'long',day:'numeric',month:'long'});
   } catch { return d; }
 }
 
 function cardHTML(t) {
   const ini = t.player.split(' ').filter(w=>w.length>1).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
-  const pill = {signed:'<span class="tpill p-signed">✓ SIGNED</span>',rumor:'<span class="tpill p-rumor">💬 RUMOR</span>',left:'<span class="tpill p-left">↩ LEFT</span>',extended:'<span class="tpill p-extended">⟳ EXTENDED</span>',roster:'<span class="tpill p-roster">👥 ROSTER</span>'}[t.status]||'';
-  const host = (() => { try { return new URL(t.source_url).hostname.replace('www.',''); } catch { return t.source_name; } })();
-  const fmtDate = (() => { try { return new Date(t.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); } catch { return t.date||''; } })();
+  const pill = {signed:'<span class="tpill p-signed">✓ Prestop</span>',rumor:'<span class="tpill p-rumor">💬 Govorica</span>',left:'<span class="tpill p-left">↩ Odhod</span>',extended:'<span class="tpill p-extended">⟳ Podaljšal</span>',roster:'<span class="tpill p-roster">👥 Igralec</span>'}[t.status]||'';
+  // datum prikazi le, ce je veljaven (Eurobasket ga pogosto nima)
+  let fmtDate = '';
+  if (t.date) { const d = new Date(t.date); if (!isNaN(d)) fmtDate = d.toLocaleDateString('sl',{day:'2-digit',month:'short'}); }
   // verifikacijska oznaka (samo ce obstaja verify polje = odhod v vecjo ligo)
   let vbadge = '';
   if (t.verify && t.verify.status) {
@@ -808,12 +788,19 @@ function cardHTML(t) {
     }[t.verify.status];
     if (vmap) {
       const [cls,label] = vmap;
-      const tip = t.verify.src ? `Vir: ${t.verify.src}` : 'Ni najdeno v nedavnih novicah';
+      const tip = t.verify.src ? `Potrjuje: ${t.verify.src}` : 'Ni najdeno v nedavnih novicah';
       vbadge = (t.verify.url)
         ? `<a class="vbadge ${cls}" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="${esc(tip)}">${label}</a>`
         : `<span class="vbadge ${cls}" title="${esc(tip)}">${label}</span>`;
     }
   }
+  // vir prikazi le, ce ni genericni Eurobasket link (ta je na vsaki kartici enak)
+  const genericSrc = /eurobasket\.com\/?$/i.test(t.source_url||'');
+  const host = (() => { try { return new URL(t.source_url).hostname.replace('www.',''); } catch { return t.source_name; } })();
+  const srcHTML = (t.source_url && !genericSrc)
+    ? `<a class="tsrc" href="${esc(t.source_url)}" target="_blank" rel="noopener" title="${esc(t.source_url)}">${esc(host)}</a>` : '';
+  const metaHTML = (fmtDate || srcHTML)
+    ? `<div class="tmeta">${fmtDate?`<div class="tdate">${fmtDate}</div>`:''}${srcHTML}</div>` : '';
   return `<div class="tc s-${t.status}${t.isNew?' is-new':''}">
     <div class="av">${esc(ini)}</div>
     <div>
@@ -824,39 +811,42 @@ function cardHTML(t) {
     </div>
     <span class="tleague">${esc(t.league)}</span>
     ${pill}
-    <div class="tmeta">
-      <div class="tdate">${fmtDate}</div>
-      ${t.source_url ? `<a class="tsrc" href="${esc(t.source_url)}" target="_blank" rel="noopener" title="${esc(t.source_url)}">${esc(host)}</a>` : `<span class="tsrc" style="color:var(--text3)">${esc(t.source_name)}</span>`}
-    </div>
+    ${metaHTML}
   </div>`;
 }
 
 function setS(s) {
   activeS = s;
-  ['all','signed','rumor','left','extended','roster'].forEach(id => {
-    document.getElementById('b-'+id).className = 'sfb';
-    if (id===s) document.getElementById('b-'+id).classList.add('a-'+s);
+  ['all','signed','roster'].forEach(id => {
+    const el = document.getElementById('b-'+id); if (!el) return;
+    el.className = 'sfb';
+    if (id===s) el.classList.add('a-'+s);
   });
   renderT();
 }
 
 function updateStats(f) {
   const data = f || getF();
-  document.getElementById('sTotal').textContent = data.length || '—';
-  document.getElementById('sSigned').textContent = data.filter(t=>t.status==='signed').length || '—';
-  document.getElementById('sRumor').textContent = data.filter(t=>t.status==='rumor').length || '—';
-  document.getElementById('sLeft').textContent = data.filter(t=>t.status==='left').length || '—';
-  document.getElementById('sExtended').textContent = data.filter(t=>t.status==='extended').length || '—';
+  const moves = data.filter(t => t.status !== 'roster');
+  const confirmed = moves.filter(t => t.verify && t.verify.status === 'confirmed').length;
+  const leagues = new Set(moves.map(t => (t.league||'').split('·')[0].trim()).filter(Boolean)).size;
+  const players = data.filter(t => t.status === 'roster').length;
+  document.getElementById('sTotal').textContent = moves.length.toLocaleString('sl') || '—';
+  document.getElementById('sConfirmed').textContent = confirmed ? confirmed.toLocaleString('sl') : '—';
+  document.getElementById('sLeagues').textContent = leagues || '—';
+  document.getElementById('sPlayers').textContent = players ? players.toLocaleString('sl') : '—';
 }
 
 function updateTicker() {
   if (!allT.length) return;
-  const items = allT.slice(0,12).map(t => {
+  const moves = allT.filter(t => t.status !== 'roster').slice(0,14);
+  if (!moves.length) { document.getElementById('ticker').innerHTML=''; return; }
+  const items = moves.map(t => {
     const cls = t.status==='signed'?'ts':t.status==='rumor'?'tr':'tl';
-    const v = {signed:'signs with',rumor:'linked to',left:'leaves',extended:'extends at'}[t.status];
-    return `<span class="ti"><b>${esc(t.player)}</b> <span class="${cls}">${v}</span> ${esc(t.to)} · ${esc(t.league)}</span>`;
-  }).join('');
-  document.getElementById('ticker').innerHTML = items + items;
+    const v = {signed:'→',rumor:'?',left:'odhaja',extended:'podaljša'}[t.status] || '→';
+    return `<span class="ti"><b>${esc(t.player)}</b> <span class="${cls}">${v}</span> ${esc(t.to)}</span>`;
+  }).join('<span class="ti-sep">·</span>');
+  document.getElementById('ticker').innerHTML = items + '<span class="ti-sep">·</span>' + items;
 }
 
 function setDot(id, state) {
@@ -891,7 +881,7 @@ function updateBalls(pct) {
     }
   }
 }
-function showErr(msg) { document.getElementById('errEl').innerHTML = `<div class="error-box"><div><div class="err-title">⚠️ Fetch incomplete</div><div class="err-msg">${msg}</div></div></div>`; }
+function showErr(msg) { document.getElementById('errEl').innerHTML = `<div class="error-box"><div><div class="err-title">⚠️ Napaka pri nalaganju</div><div class="err-msg">${msg}</div></div></div>`; }
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -917,7 +907,13 @@ async function loadEurobasket() {
   dedup(); sortT(); renderT(); updateStats(); updateTicker();
   const upd = document.getElementById('lastUpd');
   const ebMoves = EB_DATA.filter(t=>t.status!=='roster').length;
-  if (upd) upd.textContent = `${ebMoves} prestopov · ${EB_DATA.length-ebMoves} igralcev · vir: Eurobasket`;
+  // ce so podatki naloženi, skrij uvodni hero (uporabnik hoce videti prestope)
+  if (allT.length) {
+    document.getElementById('initPr').style.display = 'none';
+    if (upd) upd.textContent = `${ebMoves.toLocaleString('sl')} prestopov · ${(EB_DATA.length-ebMoves).toLocaleString('sl')} igralcev`;
+  } else {
+    if (upd) upd.textContent = 'Ni podatkov';
+  }
 })();
 
 // Theme
@@ -926,7 +922,7 @@ function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
-  document.getElementById('themeLabel').textContent = isDark ? 'Dark' : 'Light';
+  document.getElementById('themeLabel').textContent = isDark ? 'Temno' : 'Svetlo';
 }
 </script>
 </body>
