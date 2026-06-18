@@ -30,11 +30,21 @@ except ImportError:
 
 # ── RSS viri (vec jezikov). Mrtev vir se preprosto preskoci. ──
 FEEDS = [
+    # agregatorji (pan-evropsko)
     ("Sportando",      "https://sportando.basketball/en/feed/"),
     ("Sportando-rumors","https://sportando.basketball/en/rumors/basket-rumors/feed/"),
     ("Sportando-trans","https://sportando.basketball/en/basketball-transactions/feed/"),
     ("Eurohoops",      "https://www.eurohoops.net/en/feed/"),
     ("BasketNews",     "https://basketnews.com/rss.xml"),
+    # uradni medijski partner EuroLeague + FIBA: loceni feedi po tekmovanjih
+    ("TalkBasket-EL",  "https://www.talkbasket.net/euroleague/feed"),
+    ("TalkBasket-EC",  "https://www.talkbasket.net/eurocup/feed"),
+    ("TalkBasket-BCL", "https://www.talkbasket.net/bcl/feed"),
+    ("TalkBasket-FEC", "https://www.talkbasket.net/category/fiba-europe-cup/feed"),
+    ("TalkBasket-NT",  "https://www.talkbasket.net/fiba/feed"),         # nacionalne reprezentance/zveze
+    ("TalkBasket-DOM", "https://www.talkbasket.net/domestic/feed"),      # domace lige
+    ("TalkBasket-trans","https://www.talkbasket.net/transfers/feed"),    # signings & rumors
+    # jezikovni viri
     ("Sportando-IT",   "https://www.sportando.basketball/it/feed/"),
     ("Solobasket-ES",  "https://www.solobasket.com/feed"),
     ("ACB-ES",         "https://www.acb.com/rss"),
