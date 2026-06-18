@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
 
       - name: Namesti odvisnosti
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 lxml
 
       # 1) Zajemi Eurobasket -> eb_transfers_latest.json
       - name: Zajem Eurobasket
@@ -32,6 +32,11 @@ jobs:
       # 2) Predelaj -> eurobasket.json + eurobasket_new.json (v transfers_data/)
       - name: Predelava
         run: python process_transfers.py eb_transfers_latest.json
+
+      # 3) Preveri odhode proti RSS novicam (doda verify oznake)
+      - name: Verifikacija novic
+        run: python verify_transfers.py transfers_data
+        continue-on-error: true
 
       # 3) Kopiraj rezultata poleg index.html (koren repa)
       - name: Kopiraj JSON poleg strani
