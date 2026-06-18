@@ -168,6 +168,12 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 .p-left{background:var(--red-bg);color:var(--red);border:1px solid rgba(212,64,64,.3)}
 .p-extended{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(124,92,191,.3)}
 .p-roster{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+/* verifikacijske oznake */
+.vbadge{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:4px}
+.v-confirmed{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,158,92,.35)}
+.v-mentioned{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(200,135,10,.35)}
+.v-unconfirmed{background:var(--bg3);color:var(--text3);border:1px solid var(--border2)}
+a.vbadge:hover{filter:brightness(1.1);text-decoration:underline}
 .tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:80px}
 .tdate{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
 .tsrc{font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;display:block}
@@ -792,12 +798,29 @@ function cardHTML(t) {
   const pill = {signed:'<span class="tpill p-signed">✓ SIGNED</span>',rumor:'<span class="tpill p-rumor">💬 RUMOR</span>',left:'<span class="tpill p-left">↩ LEFT</span>',extended:'<span class="tpill p-extended">⟳ EXTENDED</span>',roster:'<span class="tpill p-roster">👥 ROSTER</span>'}[t.status]||'';
   const host = (() => { try { return new URL(t.source_url).hostname.replace('www.',''); } catch { return t.source_name; } })();
   const fmtDate = (() => { try { return new Date(t.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}); } catch { return t.date||''; } })();
+  // verifikacijska oznaka (samo ce obstaja verify polje = odhod v vecjo ligo)
+  let vbadge = '';
+  if (t.verify && t.verify.status) {
+    const vmap = {
+      confirmed:   ['v-confirmed','✓ potrjeno'],
+      mentioned:   ['v-mentioned','~ omenjeno'],
+      unconfirmed: ['v-unconfirmed','? nepotrjeno'],
+    }[t.verify.status];
+    if (vmap) {
+      const [cls,label] = vmap;
+      const tip = t.verify.src ? `Vir: ${t.verify.src}` : 'Ni najdeno v nedavnih novicah';
+      vbadge = (t.verify.url)
+        ? `<a class="vbadge ${cls}" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="${esc(tip)}">${label}</a>`
+        : `<span class="vbadge ${cls}" title="${esc(tip)}">${label}</span>`;
+    }
+  }
   return `<div class="tc s-${t.status}${t.isNew?' is-new':''}">
     <div class="av">${esc(ini)}</div>
     <div>
       <div class="tp">${t.isNew?'<span class="new-badge">NOVO</span> ':''}${esc(t.player)} <span class="tpos">${esc(t.pos)}</span></div>
       <div class="tmv"><span class="tf">${esc(t.from)}</span><span class="ta">→</span><span class="tt">${esc(t.to)}</span></div>
       ${t.summary?`<div class="tsum">${esc(t.summary)}</div>`:''}
+      ${vbadge}
     </div>
     <span class="tleague">${esc(t.league)}</span>
     ${pill}
