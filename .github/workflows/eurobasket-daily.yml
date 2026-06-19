@@ -1,14 +1,20 @@
-name: Eurobasket dnevni zajem
+name: Eurobasket zajem (30 min)
 
 # Kdaj tece:
 on:
   schedule:
-    - cron: '0 5 * * *'      # vsak dan ob 05:00 UTC (07:00 po SLO poleti)
+    - cron: '0,30 * * * *'   # vsakih 30 minut (ob :00 in :30)
   workflow_dispatch: {}        # gumb za rocni zagon v zavihku Actions
 
 # Workflow mora smeti pisati v repo (commit nazaj)
 permissions:
   contents: write
+
+# Ce se prejsnji zagon se ni koncal, ga ne podvajaj — pocakaj/preskoci.
+# Tako se zagoni na 30 min nikoli ne prekrivajo.
+concurrency:
+  group: eurobasket-scrape
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -38,21 +44,22 @@ jobs:
         run: python verify_transfers.py transfers_data
         continue-on-error: true
 
-      # 3) Kopiraj rezultata poleg index.html (koren repa)
+      # 4) Kopiraj rezultata poleg index.html (koren repa)
       - name: Kopiraj JSON poleg strani
         run: |
           cp transfers_data/eurobasket.json     ./eurobasket.json
           cp transfers_data/eurobasket_new.json ./eurobasket_new.json
 
-      # 4) Commit nazaj v repo (GitHub Pages takoj postrezhe nove podatke)
+      # 5) Commit nazaj v repo SAMO ce so spremembe.
+      #    [skip ci] v sporocilu prepreci morebitne verizne sprozitve.
       - name: Commit & push
         run: |
           git config user.name  "eurobasket-bot"
           git config user.email "actions@github.com"
           git add eurobasket.json eurobasket_new.json transfers_data/
           if git diff --staged --quiet; then
-            echo "Ni sprememb."
+            echo "Ni sprememb — brez commita."
           else
-            git commit -m "Auto: Eurobasket prestopi $(date -u +%Y-%m-%d)"
+            git commit -m "Auto: Eurobasket prestopi $(date -u +'%Y-%m-%d %H:%M') [skip ci]"
             git push
           fi
