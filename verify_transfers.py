@@ -159,23 +159,49 @@ def club_tokens(club):
     return [w for w in norm(club).split() if len(w) >= 3 and w not in stop]
 
 
+def _word_positions(tokens, target):
+    """Indeksi, kjer se cela beseda 'target' pojavi v seznamu tokenov."""
+    return [i for i, w in enumerate(tokens) if w == target]
+
+
 def verify_move(rec, news):
-    """Vrne dict verify za en odhod v vecjo ligo."""
+    """Vrne dict verify za en odhod v vecjo ligo.
+
+    Strogo ujemanje, da se izognemo laznim potrditvam:
+    - priimek in vsaj en klubski token morata biti CELI BESEDI (ne podniz),
+    - in BLIZU skupaj (v oknu <= 6 besed), ne kjerkoli v clanku,
+    - prvo ime (ce obstaja) mora biti tudi prisotno za kratke/pogoste priimke.
+    """
     pl = name_tokens(rec['name'])
     cl = club_tokens(rec.get('to') or '')
     if not pl or not cl:
         return {"status": "unconfirmed", "src": None, "url": None}
-    # priimek = zadnji token imena (najbolj distinktiven)
     surname = pl[-1]
-    best = None       # (rank, item)  rank: 2 confirmed, 1 mentioned
+    first = pl[0] if len(pl) > 1 else None
+    # kratek/pogost priimek (<=4 crke) zahteva tudi prisotnost prvega imena
+    needs_first = len(surname) <= 4
+
+    WINDOW = 6
+    best = None  # (rank, item)
     for n in news:
-        txt = n["text"]
-        if surname not in txt:
+        toks = n["text"].split()
+        s_pos = _word_positions(toks, surname)
+        if not s_pos:
             continue
-        # vsaj en klubski token mora biti zraven
-        if not any(c in txt for c in cl):
+        # ce kratek priimek: prvo ime mora biti v novici (kjerkoli)
+        if needs_first:
+            if not first or first not in toks:
+                continue
+        # vsaj en klubski token mora biti CELA BESEDA in BLIZU priimka
+        near = False
+        for cpos_target in cl:
+            for c_i in _word_positions(toks, cpos_target):
+                if any(abs(c_i - s_i) <= WINDOW for s_i in s_pos):
+                    near = True; break
+            if near: break
+        if not near:
             continue
-        # imamo ime+klub skupaj
+        # ime+klub sta blizu — klasificiraj
         is_sign  = bool(SIGN_RE.search(n["raw"]))
         is_rumor = bool(RUMOR_RE.search(n["raw"]))
         rank = 2 if (is_sign and not is_rumor) else 1

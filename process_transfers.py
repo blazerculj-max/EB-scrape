@@ -40,7 +40,8 @@ for r in recs:
     if not r['name']: continue
     clean.append({'n':r['name'],'h':r['height'],'p':r['pos'],'y':r['born'],'nat':norm_nat(r.get('nat')),
         'c':clean_club(r['club']),'co':r['country'],'coD':disp_country(r['country']),
-        's':r['section'],'to':r['to'],'tl':r['toLeague'],'isComp':r['country'] in COMPS})
+        's':r['section'],'to':r['to'],'tl':r['toLeague'],'isComp':r['country'] in COMPS,
+        'url':r.get('url')})
 
 # --- PRIMERJAVA s prejsnjim ---
 # kljuc transferja: ime|klub|destinacija ; kljuc igralca: ime|klub|drzava
@@ -152,6 +153,7 @@ def to_app(r, is_new=False):
         'born': r.get('y'),
         'height': r.get('h'),
         'country': r.get('coD'),
+        'playerUrl': r.get('url'),
         'origin': 'eurobasket',
     }
     if is_new:

@@ -80,20 +80,27 @@ def html_to_text(html):
 
 
 def build_nat_map(html):
-    """Mapa ime->nacionalnost iz flag slik (identicno JS regexu)."""
-    m = {}
+    """Mapa ime->nacionalnost in ime->profilni URL iz flag slik + player povezav."""
+    nat_m, url_m = {}, {}
     re_nat = re.compile(
         r'flags/[A-Za-z]+\.(?:png|gif)"[^>]*alt="([^"]*)"[^>]*>\s*'
-        r'<a[^>]*player/[^"]*"[^>]*>\s*(?:&nbsp;)?([^<]+)</a>', re.I)
+        r'<a[^>]*href="([^"]*player/[^"]*)"[^>]*>\s*(?:&nbsp;)?([^<]+)</a>', re.I)
     for mt in re_nat.finditer(html):
         nat = mt.group(1).strip()
-        name = clean(mt.group(2))
+        href = mt.group(2).strip()
+        name = clean(mt.group(3))
         if name:
-            m[name.lower()] = nat
-    return m
+            nat_m[name.lower()] = nat
+            if href:
+                # naredi absolutni URL
+                if href.startswith('//'): href = 'https:' + href
+                elif href.startswith('/'): href = 'https://www.eurobasket.com' + href
+                elif not href.startswith('http'): href = 'https://www.eurobasket.com/' + href.lstrip('/')
+                url_m[name.lower()] = href
+    return nat_m, url_m
 
 
-def parse_page(txt, nat_map, country):
+def parse_page(txt, nat_map, url_map, country):
     lines = [l.strip() for l in txt.split("\n")]
     start = next((i for i,l in enumerate(lines) if "Updated on" in l), -1)
     if start < 0: start = 0
@@ -123,6 +130,7 @@ def parse_page(txt, nat_map, country):
                 height = None; pos = None; born = int(m2.group(1).replace("F",""))
             rec = {"country": country, "name": nm,
                    "nat": nat_map.get(nm.lower()),
+                   "url": url_map.get(nm.lower()),
                    "height": height, "pos": pos, "born": born,
                    "club": clean(club), "section": section,
                    "to": None, "toLeague": None}
@@ -147,10 +155,10 @@ def fetch_one(tgt, session, retries=3):
                 last = f"HTTP {r.status_code}"
                 time.sleep(1.5 * (attempt + 1)); continue
             html = r.text
-            nat_map = build_nat_map(html)
+            nat_map, url_map = build_nat_map(html)
             text = html_to_text(html)
             dm = re.search(r'Updated on:\s*([^\n]+)', text)
-            recs = parse_page(text, nat_map, tgt)
+            recs = parse_page(text, nat_map, url_map, tgt)
             updated = dm.group(1).strip() if dm else ""
             return {"tgt": tgt, "recs": recs, "updated": updated, "err": False}
         except Exception as e:
