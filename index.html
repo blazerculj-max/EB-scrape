@@ -177,6 +177,10 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 .v-unconfirmed{background:var(--bg3);color:var(--text3);border:1px solid var(--border2)}
 a.vbadge:hover{filter:brightness(1.1);text-decoration:underline}
 .vsrc{margin-left:5px;padding-left:5px;border-left:1px solid currentColor;opacity:.75;font-weight:500}
+.vrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
+.vlink{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 9px;border-radius:5px;text-decoration:none;background:var(--green-bg);color:var(--green);border:1px solid rgba(45,158,92,.35);transition:all .15s}
+.vlink:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.vlink-src{padding-left:6px;margin-left:1px;border-left:1px solid currentColor;opacity:.7;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
 .tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:80px}
 .tdate{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
 .tsrc{font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;display:block}
@@ -804,13 +808,12 @@ function cardHTML(t) {
     }[t.verify.status];
     if (vmap) {
       const [cls,label] = vmap;
+      const srcName = t.verify.src ? esc(t.verify.src) : 'vir';
+      // sama oznaka (kljukica + status) — ni vec klikljiva
+      vbadge = `<span class="vbadge ${cls}" title="Vir: ${srcName}">${label}</span>`;
+      // locen gumb "Link do potrditve" — samo ce imamo dejansko povezavo
       if (t.verify.url) {
-        // klikljiva oznaka + vidno ime vira, da se da preveriti
-        const srcName = t.verify.src ? esc(t.verify.src) : 'vir';
-        vbadge = `<a class="vbadge ${cls}" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="Odpri novico (${srcName})">${label}<span class="vsrc">${srcName} ↗</span></a>`;
-      } else {
-        const tip = 'Ni najdeno v nedavnih novicah';
-        vbadge = `<span class="vbadge ${cls}" title="${esc(tip)}">${label}</span>`;
+        vbadge += `<a class="vlink" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="Odpri novico (${srcName})">🔗 Link do potrditve<span class="vlink-src">${srcName}</span></a>`;
       }
     }
   }
@@ -827,7 +830,7 @@ function cardHTML(t) {
       <div class="tp">${t.isNew?'<span class="new-badge">NOVO</span> ':''}${esc(t.player)} <span class="tpos">${esc(t.pos)}</span></div>
       <div class="tmv"><span class="tf">${esc(t.from)}</span><span class="ta">→</span><span class="tt">${esc(t.to)}</span></div>
       ${t.summary?`<div class="tsum">${esc(t.summary)}</div>`:''}
-      ${vbadge}
+      ${vbadge?`<div class="vrow">${vbadge}</div>`:''}
     </div>
     <span class="tleague">${esc(t.league)}</span>
     ${pill}
