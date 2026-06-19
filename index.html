@@ -136,6 +136,7 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 .sfb:hover{border-color:var(--border2);color:var(--text)}
 .sfb.a-all{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .sfb.a-signed{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.sfb.a-confirmed{background:var(--green-bg);color:var(--green);border-color:var(--green)}
 .sfb.a-rumor{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
 .sfb.a-left{background:var(--red-bg);color:var(--red);border-color:var(--red)}
 .sfb.a-extended{background:var(--purple-bg);color:var(--purple);border-color:var(--purple)}
@@ -181,6 +182,9 @@ a.vbadge:hover{filter:brightness(1.1);text-decoration:underline}
 .vlink{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 9px;border-radius:5px;text-decoration:none;background:var(--green-bg);color:var(--green);border:1px solid rgba(45,158,92,.35);transition:all .15s}
 .vlink:hover{background:var(--green);color:#fff;border-color:var(--green)}
 .vlink-src{padding-left:6px;margin-left:1px;border-left:1px solid currentColor;opacity:.7;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+.vlink-soft{background:var(--yellow-bg);color:var(--yellow);border-color:rgba(200,135,10,.35)}
+.vlink-soft:hover{background:var(--yellow);color:#fff;border-color:var(--yellow)}
+.vno{font-family:var(--mono);font-size:9px;color:var(--text3);padding:3px 0;opacity:.7}
 .tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:80px}
 .tdate{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
 .tsrc{font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;display:block}
@@ -350,6 +354,7 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
     </select>
     <div class="sf-btns">
       <button class="sfb a-all"  id="b-all"      onclick="setS('all')">Vsi</button>
+      <button class="sfb"        id="b-confirmed" onclick="setS('confirmed')">✓ Potrjeni</button>
       <button class="sfb"        id="b-signed"   onclick="setS('signed')">✅ Prestopi</button>
       <button class="sfb"        id="b-roster"   onclick="setS('roster')">👥 Igralci</button>
     </div>
@@ -736,7 +741,9 @@ function getF() {
     // explicitly picks the Roster filter or types a search query — otherwise
     // 10k+ roster rows would bury the actual transfer news.
     if (t.status === 'roster' && activeS !== 'roster' && !q) return false;
-    if (activeS !== 'all' && t.status !== activeS) return false;
+    if (activeS === 'confirmed') {
+      if (!(t.verify && t.verify.status === 'confirmed')) return false;
+    } else if (activeS !== 'all' && t.status !== activeS) return false;
     if (l && !t.league.toLowerCase().includes(l.toLowerCase())) return false;
     if (p && t.pos !== p) return false;
     if (q) {
@@ -809,11 +816,17 @@ function cardHTML(t) {
     if (vmap) {
       const [cls,label] = vmap;
       const srcName = t.verify.src ? esc(t.verify.src) : 'vir';
-      // sama oznaka (kljukica + status) — ni vec klikljiva
-      vbadge = `<span class="vbadge ${cls}" title="Vir: ${srcName}">${label}</span>`;
-      // locen gumb "Link do potrditve" — samo ce imamo dejansko povezavo
-      if (t.verify.url) {
+      // sama oznaka (kljukica + status) — ni klikljiva
+      vbadge = `<span class="vbadge ${cls}" title="${t.verify.src?('Vir: '+srcName):'Ni najdeno v nedavnih novicah'}">${label}</span>`;
+      if (t.verify.status === 'confirmed' && t.verify.url) {
+        // potrjen prestop -> gumb z linkom do novice
         vbadge += `<a class="vlink" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="Odpri novico (${srcName})">🔗 Link do potrditve<span class="vlink-src">${srcName}</span></a>`;
+      } else if (t.verify.status === 'mentioned' && t.verify.url) {
+        // omenjeno (mogoce govorica) -> link, a nevtralen
+        vbadge += `<a class="vlink vlink-soft" href="${esc(t.verify.url)}" target="_blank" rel="noopener" title="Odpri novico (${srcName})">🔗 Vir<span class="vlink-src">${srcName}</span></a>`;
+      } else {
+        // nepotrjeno -> sivo besedilo, brez klika
+        vbadge += `<span class="vno">ni potrditve</span>`;
       }
     }
   }
@@ -840,7 +853,7 @@ function cardHTML(t) {
 
 function setS(s) {
   activeS = s;
-  ['all','signed','roster'].forEach(id => {
+  ['all','confirmed','signed','roster'].forEach(id => {
     const el = document.getElementById('b-'+id); if (!el) return;
     el.className = 'sfb';
     if (id===s) el.classList.add('a-'+s);
