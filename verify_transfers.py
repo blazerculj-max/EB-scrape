@@ -35,7 +35,7 @@ FEEDS = [
     ("Sportando-rumors","https://sportando.basketball/en/rumors/basket-rumors/feed/"),
     ("Sportando-trans","https://sportando.basketball/en/basketball-transactions/feed/"),
     ("Eurohoops",      "https://www.eurohoops.net/en/feed/"),
-    ("BasketNews",     "https://basketnews.com/rss.xml"),
+    ("BallinEurope",   "https://www.ballineurope.com/feed/"),
     # uradni medijski partner EuroLeague + FIBA: loceni feedi po tekmovanjih
     ("TalkBasket-EL",  "https://www.talkbasket.net/euroleague/feed"),
     ("TalkBasket-EC",  "https://www.talkbasket.net/eurocup/feed"),
@@ -44,10 +44,11 @@ FEEDS = [
     ("TalkBasket-NT",  "https://www.talkbasket.net/fiba/feed"),         # nacionalne reprezentance/zveze
     ("TalkBasket-DOM", "https://www.talkbasket.net/domestic/feed"),      # domace lige
     ("TalkBasket-trans","https://www.talkbasket.net/transfers/feed"),    # signings & rumors
-    # jezikovni viri
+    # jezikovni / nacionalni viri
     ("Sportando-IT",   "https://www.sportando.basketball/it/feed/"),
+    ("Eurohoops-ES",   "https://www.eurohoops.net/basket/spain/feed/"),  # ACB / spanska kosarka
+    ("Gigantes-ES",    "https://www.gigantes.com/feed/"),                # spanska kos. revija
     ("Solobasket-ES",  "https://www.solobasket.com/feed"),
-    ("ACB-ES",         "https://www.acb.com/rss"),
 ]
 
 HEADERS = {
@@ -99,26 +100,43 @@ def strip_html(s):
     return re.sub(r'\s+', ' ', _html.unescape(re.sub(r'<[^>]+>', ' ', str(s or '')))).strip()
 
 
+def _parse_items(content, name):
+    soup = BeautifulSoup(content, "xml")
+    items = []
+    for it in soup.find_all(["item", "entry"]):
+        title = strip_html(it.find("title").get_text() if it.find("title") else "")
+        desc_el = it.find("description") or it.find("summary") or it.find("content")
+        desc = strip_html(desc_el.get_text() if desc_el else "")
+        link_el = it.find("link")
+        link = (link_el.get("href") or link_el.get_text()).strip() if link_el else ""
+        items.append({"src": name, "title": title, "desc": desc,
+                      "link": link, "text": norm(title + " " + desc),
+                      "raw": title + " " + desc})
+    return items
+
+
 def fetch_feed(name_url):
     name, url = name_url
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=30)
-        if r.status_code != 200:
-            print(f"  ! {name}: HTTP {r.status_code}", file=sys.stderr); return []
-        soup = BeautifulSoup(r.content, "xml")
-        items = []
-        for it in soup.find_all(["item", "entry"]):
-            title = strip_html(it.find("title").get_text() if it.find("title") else "")
-            desc_el = it.find("description") or it.find("summary") or it.find("content")
-            desc = strip_html(desc_el.get_text() if desc_el else "")
-            link_el = it.find("link")
-            link = (link_el.get("href") or link_el.get_text()).strip() if link_el else ""
-            items.append({"src": name, "title": title, "desc": desc,
-                          "link": link, "text": norm(title + " " + desc),
-                          "raw": title + " " + desc})
-        return items
-    except Exception as e:
-        print(f"  ! {name}: {e}", file=sys.stderr); return []
+    # Drugi nabor headerjev za vire z blago anti-bot zascito (npr. 403).
+    ALT = dict(HEADERS, **{
+        "Accept": "*/*",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0",
+        "Cache-Control": "no-cache",
+    })
+    for hdrs in (HEADERS, ALT):
+        try:
+            r = requests.get(url, headers=hdrs, timeout=30)
+            if r.status_code == 200:
+                return _parse_items(r.content, name)
+            if r.status_code in (403, 429):
+                continue  # poskusi z drugim naborom headerjev
+            print(f"  ! {name}: HTTP {r.status_code}", file=sys.stderr)
+            return []
+        except Exception as e:
+            print(f"  ! {name}: {e}", file=sys.stderr)
+            return []
+    print(f"  ! {name}: blokiran (403/429 tudi po drugem poskusu)", file=sys.stderr)
+    return []
 
 
 def collect_news():
