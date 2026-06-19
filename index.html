@@ -709,8 +709,19 @@ function dedup() {
   allT = [...byKey.values()];
 }
 function sortT() {
+  // Stiristopenjska prioriteta:
+  // 0 = novi IN potrjeni, 1 = novi, 2 = potrjeni (stari), 3 = ostalo
+  const rank = t => {
+    const isNew = !!t.isNew;
+    const isConf = t.verify && t.verify.status === 'confirmed';
+    if (isNew && isConf) return 0;
+    if (isNew) return 1;
+    if (isConf) return 2;
+    return 3;
+  };
   allT.sort((a,b) => {
-    if (!!b.isNew !== !!a.isNew) return (b.isNew?1:0) - (a.isNew?1:0);  // 🆕 first
+    const ra = rank(a), rb = rank(b);
+    if (ra !== rb) return ra - rb;
     const dc = (b.date||'').localeCompare(a.date||'');
     if (dc) return dc;
     const ord = {signed:0,rumor:1,extended:2,left:3,roster:4};
