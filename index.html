@@ -529,12 +529,12 @@ function sortDB(col) {
 }
 
 function filterDB() {
-  const q = document.getElementById('dbSearch').value.toLowerCase();
+  const q = fold(document.getElementById('dbSearch').value.trim());
   const lf = document.getElementById('dbLeagueF').value;
   const df = document.getElementById('dbDiffF').value;
 
   const filtered = DB.filter(r => {
-    const txt = (r.name + r.league + r.cat + r.url + (r.city||'')).toLowerCase();
+    const txt = fold(r.name + r.league + r.cat + r.url + (r.city||''));
     if (q && !txt.includes(q)) return false;
     if (lf && r.cat !== lf) return false;
     if (df && !r.diff.startsWith(df)) return false;
@@ -709,8 +709,22 @@ function sortT() {
   });
 }
 
+// "Kosmato" iskanje: splosci diakritiko, da c/č/ć/ç ipd. veljajo za isto.
+// NFD razstavi vecino naglasenih crk (č -> c + ˇ); regex odstrani diakritiko.
+// Nekaj crk NFD ne razstavi (turski ı, nordijski ø/å, poljski ł...), zato rocna mapa.
+const FOLD_MAP = {
+  'ı':'i','İ':'i','ş':'s','Ş':'s','ğ':'g','Ğ':'g',
+  'ø':'o','Ø':'o','ł':'l','Ł':'l','đ':'d','Đ':'d',
+  'ß':'ss','æ':'ae','Æ':'ae','œ':'oe','Œ':'oe','þ':'th','ð':'d'
+};
+function fold(s) {
+  s = String(s || '');
+  s = s.replace(/[ıİşŞğĞøØłŁđĐßæÆœŒþð]/g, ch => FOLD_MAP[ch] || ch);
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 function getF() {
-  const q = document.getElementById('fSearch').value.toLowerCase();
+  const q = fold(document.getElementById('fSearch').value.trim());
   const l = document.getElementById('fLeague').value;
   const p = document.getElementById('fPos').value;
   return allT.filter(t => {
@@ -722,8 +736,9 @@ function getF() {
     if (l && !t.league.toLowerCase().includes(l.toLowerCase())) return false;
     if (p && t.pos !== p) return false;
     if (q) {
-      const h = `${t.player} ${t.from} ${t.to} ${t.league} ${t.summary} ${t.nat||''} ${t.country||''}`.toLowerCase();
-      if (!h.includes(q)) return false;
+      const h = fold(`${t.player} ${t.from} ${t.to} ${t.league} ${t.summary} ${t.nat||''} ${t.country||''}`);
+      // vsaka beseda poizvedbe mora biti v besedilu (omogoca "jokic den" ipd.)
+      if (!q.split(/\s+/).every(w => h.includes(w))) return false;
     }
     return true;
   });
