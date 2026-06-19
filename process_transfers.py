@@ -158,8 +158,18 @@ def to_app(r, is_new=False):
         obj['isNew'] = True
     return obj
 
-# Full
-app_items = [to_app(r) for r in clean]
+# Mnozica ID-jev novih (prestopi + igralci) za oznako isNew v polni bazi
+new_ids = set()
+for r in new_moves + new_players:
+    new_ids.add(app_id(r))
+
+# Full — z isNew oznako za tiste, ki jih je ta cikel na novo zaznal
+app_items = []
+for r in clean:
+    obj = to_app(r)
+    if app_id(r) in new_ids:
+        obj['isNew'] = True
+    app_items.append(obj)
 json.dump({'generated_at': d['generated'], 'schema_version': 1, 'source': 'Eurobasket master',
            'season': '2025-2026', 'count': len(app_items), 'items': app_items},
           open(f'{OUTDIR}/eurobasket.json','w',encoding='utf-8'), ensure_ascii=False, separators=(',',':'))
