@@ -135,6 +135,7 @@ nav{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px
 .sfb{padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
 .sfb:hover{border-color:var(--border2);color:var(--text)}
 .sfb.a-all{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.sfb.a-recent{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .sfb.a-signed{background:var(--green-bg);color:var(--green);border-color:var(--green)}
 .sfb.a-confirmed{background:var(--green-bg);color:var(--green);border-color:var(--green)}
 .sfb.a-rumor{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
@@ -355,7 +356,8 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
       <option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option><option>coach</option>
     </select>
     <div class="sf-btns">
-      <button class="sfb a-all"  id="b-all"      onclick="setS('all')">Vsi</button>
+      <button class="sfb a-recent" id="b-recent" onclick="setS('recent')">🕒 Zadnjih 72h</button>
+      <button class="sfb"        id="b-all"      onclick="setS('all')">Vsi</button>
       <button class="sfb"        id="b-confirmed" onclick="setS('confirmed')">✓ Potrjeni</button>
       <button class="sfb"        id="b-signed"   onclick="setS('signed')">✅ Prestopi</button>
       <button class="sfb"        id="b-roster"   onclick="setS('roster')">👥 Igralci</button>
@@ -599,7 +601,7 @@ function exportPY() {
 // ═══════════════════════════════════════════════════════
 // LIVE TRACKER
 // ═══════════════════════════════════════════════════════
-let allT = [], activeS = 'all', fetching = false;
+let allT = [], activeS = 'recent', fetching = false;
 let EB_DATA = [];
 
 // ═══════════════════════════════════════════════════════
@@ -754,7 +756,13 @@ function getF() {
     // explicitly picks the Roster filter or types a search query — otherwise
     // 10k+ roster rows would bury the actual transfer news.
     if (t.status === 'roster' && activeS !== 'roster' && !q) return false;
-    if (activeS === 'confirmed') {
+    if (activeS === 'recent') {
+      // privzeti pogled: prestopi zaznani v zadnjih 72 urah (brez roster)
+      if (t.status === 'roster') return false;
+      if (!t.firstSeen) return false;
+      const age = Date.now() - new Date(t.firstSeen).getTime();
+      if (isNaN(age) || age > 72*3600*1000) return false;
+    } else if (activeS === 'confirmed') {
       if (!(t.verify && t.verify.status === 'confirmed')) return false;
     } else if (activeS !== 'all' && t.status !== activeS) return false;
     if (l && !t.league.toLowerCase().includes(l.toLowerCase())) return false;
@@ -773,7 +781,20 @@ function renderT() {
   const el = document.getElementById('transfersEl');
   const emp = document.getElementById('emptyEl');
   if (!allT.length) { el.innerHTML=''; emp.style.display='none'; return; }
-  if (!fAll.length) { el.innerHTML=''; emp.style.display='block'; return; }
+  if (!fAll.length) {
+    el.innerHTML='';
+    // ce je prazen ravno 72h pogled, ponudi prehod na Vsi
+    if (activeS === 'recent') {
+      emp.innerHTML = `<div class="empty-ico">🕒</div>
+        <div class="empty-title">V zadnjih 72 urah ni novih prestopov</div>
+        <div>Poglej celotno bazo s klikom na <a href="#" onclick="setS('all');return false" style="color:var(--accent)">Vsi</a>.</div>`;
+    } else {
+      emp.innerHTML = `<div class="empty-ico">🔍</div>
+        <div class="empty-title">Ni zadetkov za izbrane filtre</div>
+        <div>Poskusi spremeniti iskanje ali filtre.</div>`;
+    }
+    emp.style.display='block'; return;
+  }
   emp.style.display = 'none';
 
   // Cap DOM size — rendering 10k+ roster rows at once freezes the page.
@@ -845,11 +866,28 @@ function cardHTML(t) {
   }
   // vir prikazi le, ce ni genericni Eurobasket link (ta je na vsaki kartici enak)
   const genericSrc = /eurobasket\.com\/?$/i.test(t.source_url||'');
-  const host = (() => { try { return new URL(t.source_url).hostname.replace('www.',''); } catch { return t.source_name; } })();
-  const srcHTML = (t.source_url && !genericSrc)
-    ? `<a class="tsrc" href="${esc(t.source_url)}" target="_blank" rel="noopener" title="${esc(t.source_url)}">${esc(host)}</a>` : '';
-  const metaHTML = (fmtDate || srcHTML)
-    ? `<div class="tmeta">${fmtDate?`<div class="tdate">${fmtDate}</div>`:''}${srcHTML}</div>` : '';
+  // datum zaznave (firstSeen) — kdaj smo prestop prvic videli
+  let seenHTML = '';
+  if (t.firstSeen) {
+    const ts = new Date(t.firstSeen);
+    if (!isNaN(ts)) {
+      const mins = Math.floor((Date.now()-ts.getTime())/60000);
+      let rel;
+      if (mins < 60) rel = `pred ${Math.max(1,mins)} min`;
+      else if (mins < 1440) rel = `pred ${Math.floor(mins/60)} h`;
+      else { const dn = Math.floor(mins/1440); rel = dn===1?'včeraj':`pred ${dn} dnevi`; }
+      const abs = ts.toLocaleDateString('sl',{day:'2-digit',month:'short'});
+      seenHTML = `<div class="tdate" title="Zaznano ${abs}">🕒 zaznano ${rel}</div>`;
+    }
+  }
+  // datum novice (verify) — ce ga vir ponuja
+  let newsHTML = '';
+  if (t.verify && t.verify.date) {
+    const nd = new Date(t.verify.date);
+    if (!isNaN(nd)) newsHTML = `<div class="tdate" title="Datum novice">📰 ${nd.toLocaleDateString('sl',{day:'2-digit',month:'short'})}</div>`;
+  }
+  const metaHTML = (seenHTML || newsHTML)
+    ? `<div class="tmeta">${seenHTML}${newsHTML}</div>` : '';
   return `<div class="tc s-${t.status}${t.isNew?' is-new':''}">
     <div class="av">${esc(ini)}</div>
     <div>
@@ -866,7 +904,7 @@ function cardHTML(t) {
 
 function setS(s) {
   activeS = s;
-  ['all','confirmed','signed','roster'].forEach(id => {
+  ['recent','all','confirmed','signed','roster'].forEach(id => {
     const el = document.getElementById('b-'+id); if (!el) return;
     el.className = 'sfb';
     if (id===s) el.classList.add('a-'+s);

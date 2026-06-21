@@ -165,12 +165,34 @@ new_ids = set()
 for r in new_moves + new_players:
     new_ids.add(app_id(r))
 
-# Full — z isNew oznako za tiste, ki jih je ta cikel na novo zaznal
+# --- firstSeen: kdaj je bil prestop PRVIC zaznan (ohranjeno med zagoni) ---
+# Hranimo seen.json: { app_id: ISO-cas }. Star zig obdrzimo, nov zapisemo zdaj.
+from datetime import datetime, timezone
+SEEN_PATH = f'{OUTDIR}/seen.json'
+now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+seen = {}
+if os.path.exists(SEEN_PATH):
+    try:
+        seen = json.load(open(SEEN_PATH, encoding='utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        seen = {}
+# samo dejanski prestopi dobijo firstSeen (ne roster seznami)
+for r in clean:
+    if r.get('to'):
+        aid = app_id(r)
+        if aid not in seen:
+            seen[aid] = now_iso
+json.dump(seen, open(SEEN_PATH, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+
+# Full — z isNew + firstSeen
 app_items = []
 for r in clean:
     obj = to_app(r)
-    if app_id(r) in new_ids:
+    aid = app_id(r)
+    if aid in new_ids:
         obj['isNew'] = True
+    if r.get('to') and aid in seen:
+        obj['firstSeen'] = seen[aid]
     app_items.append(obj)
 json.dump({'generated_at': d['generated'], 'schema_version': 1, 'source': 'Eurobasket master',
            'season': '2025-2026', 'count': len(app_items), 'items': app_items},

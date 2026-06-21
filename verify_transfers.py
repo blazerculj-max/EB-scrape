@@ -109,7 +109,17 @@ def _parse_items(content, name):
         desc = strip_html(desc_el.get_text() if desc_el else "")
         link_el = it.find("link")
         link = (link_el.get("href") or link_el.get_text()).strip() if link_el else ""
-        items.append({"src": name, "title": title, "desc": desc,
+        # datum novice (RSS pubDate / Atom published|updated) -> ISO YYYY-MM-DD
+        date_el = it.find("pubDate") or it.find("published") or it.find("updated")
+        ndate = ""
+        if date_el and date_el.get_text():
+            try:
+                from email.utils import parsedate_to_datetime
+                ndate = parsedate_to_datetime(date_el.get_text().strip()).strftime('%Y-%m-%d')
+            except Exception:
+                m = re.search(r'(\d{4}-\d{2}-\d{2})', date_el.get_text())
+                ndate = m.group(1) if m else ""
+        items.append({"src": name, "title": title, "desc": desc, "date": ndate,
                       "link": link, "text": norm(title + " " + desc),
                       "raw": title + " " + desc})
     return items
@@ -175,7 +185,7 @@ def verify_move(rec, news):
     pl = name_tokens(rec['name'])
     cl = club_tokens(rec.get('to') or '')
     if not pl or not cl:
-        return {"status": "unconfirmed", "src": None, "url": None}
+        return {"status": "unconfirmed", "src": None, "url": None, "date": None}
     surname = pl[-1]
     first = pl[0] if len(pl) > 1 else None
     # kratek/pogost priimek (<=4 crke) zahteva tudi prisotnost prvega imena
@@ -210,10 +220,10 @@ def verify_move(rec, news):
             if rank == 2:
                 break
     if best is None:
-        return {"status": "unconfirmed", "src": None, "url": None}
+        return {"status": "unconfirmed", "src": None, "url": None, "date": None}
     rank, n = best
     return {"status": "confirmed" if rank == 2 else "mentioned",
-            "src": n["src"], "url": n["link"] or None}
+            "src": n["src"], "url": n["link"] or None, "date": n.get("date") or None}
 
 
 def process_file(path, news):
