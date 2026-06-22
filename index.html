@@ -713,7 +713,7 @@ function dedup() {
   allT = [...byKey.values()];
 }
 function sortT() {
-  // Stiristopenjska prioriteta:
+  // Prioriteta znotraj istega casa zaznave:
   // 0 = novi IN potrjeni, 1 = novi, 2 = potrjeni (stari), 3 = ostalo
   const rank = t => {
     const isNew = !!t.isNew;
@@ -723,11 +723,19 @@ function sortT() {
     if (isConf) return 2;
     return 3;
   };
+  const seenTime = t => {
+    if (!t.firstSeen) return 0;
+    const ms = new Date(t.firstSeen).getTime();
+    return isNaN(ms) ? 0 : ms;
+  };
   allT.sort((a,b) => {
+    // 1) najnovejsi datum zaznave (firstSeen) na vrh
+    const ta = seenTime(a), tb = seenTime(b);
+    if (ta !== tb) return tb - ta;
+    // 2) znotraj istega casa: novi/potrjeni pred ostalimi
     const ra = rank(a), rb = rank(b);
     if (ra !== rb) return ra - rb;
-    const dc = (b.date||'').localeCompare(a.date||'');
-    if (dc) return dc;
+    // 3) nazadnje po statusu (signed pred roster ipd.)
     const ord = {signed:0,rumor:1,extended:2,left:3,roster:4};
     return (ord[a.status]||0) - (ord[b.status]||0);
   });
@@ -802,12 +810,20 @@ function renderT() {
   const capped = fAll.length > CAP;
   const f = capped ? fAll.slice(0, CAP) : fAll;
 
+  // Grupiraj po DNEVU zaznave (firstSeen). Brez firstSeen -> skupina 'Starejše'.
+  const dayKey = t => {
+    if (!t.firstSeen) return '0000-00-00';
+    const d = new Date(t.firstSeen);
+    if (isNaN(d)) return '0000-00-00';
+    return d.toISOString().slice(0,10); // YYYY-MM-DD
+  };
   const groups = {};
-  f.forEach(t => { const d=t.date||'Unknown'; if(!groups[d]) groups[d]=[]; groups[d].push(t); });
+  f.forEach(t => { const d=dayKey(t); if(!groups[d]) groups[d]=[]; groups[d].push(t); });
+  // dnevi padajoce (najnovejsi zgoraj); '0000-00-00' (brez datuma) na dno
   const dates = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
 
   let html = dates.map(d => {
-    const lbl = fmtGroupDate(d);
+    const lbl = d==='0000-00-00' ? 'Starejše' : fmtSeenDay(d);
     const cards = groups[d].map(t => cardHTML(t)).join('');
     return `<div class="group-hd">${lbl}<span class="g-cnt">${groups[d].length}</span></div>${cards}`;
   }).join('');
@@ -818,6 +834,18 @@ function renderT() {
   el.innerHTML = html;
 
   updateStats(fAll);
+}
+
+function fmtSeenDay(ymd) {
+  try {
+    const dt = new Date(ymd + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((today - dt)/86400000);
+    if (diff <= 0) return 'Danes';
+    if (diff === 1) return 'Včeraj';
+    if (diff < 7) return `Pred ${diff} dnevi`;
+    return dt.toLocaleDateString('sl',{day:'numeric',month:'long',year:'numeric'});
+  } catch { return ymd; }
 }
 
 function fmtGroupDate(d) {
