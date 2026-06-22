@@ -244,9 +244,28 @@ def process_file(path, news):
             rec = {"name": it.get("player") or it.get("name") or "",
                    "to": it.get("to") or ""}
             v = verify_move(rec, news)
-            it["verify"] = v
-            if v["status"] == "confirmed": n_conf += 1
-            elif v["status"] == "mentioned": n_ment += 1
+            # OHRANI obstojeco potrditev: ce je prestop ze bil potrjen/omenjen
+            # (z linkom), ga NE povozimo s slabsim rezultatom, ko novica
+            # izgine iz RSS feeda. Zamenjamo le, ce je nova ocena enako
+            # dobra ali boljsa (in ima link).
+            R = {"confirmed": 2, "mentioned": 1, "unconfirmed": 0}
+            old = it.get("verify")
+            old_rank = R.get((old or {}).get("status"), -1) if old else -1
+            old_has_url = bool((old or {}).get("url"))
+            new_rank = R.get(v["status"], 0)
+            new_has_url = bool(v.get("url"))
+            # nova zmaga, ce ima visji rang, ALI enak rang a (prej ni bilo linka, zdaj je)
+            take_new = (new_rank > old_rank) or \
+                       (new_rank == old_rank and new_has_url and not old_has_url) or \
+                       (old is None)
+            # nikoli ne degradiramo obstojece potrditve z linkom na nepotrjeno
+            if old_has_url and new_rank < old_rank:
+                take_new = False
+            chosen = v if take_new else old
+            it["verify"] = chosen
+            st = (chosen or {}).get("status")
+            if st == "confirmed": n_conf += 1
+            elif st == "mentioned": n_ment += 1
             else: n_unc += 1
         else:
             n_skip += 1

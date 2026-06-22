@@ -184,7 +184,22 @@ for r in clean:
             seen[aid] = now_iso
 json.dump(seen, open(SEEN_PATH, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 
-# Full — z isNew + firstSeen
+# --- ohrani obstojece verify oznake iz prejsnje baze ---
+# verify_transfers.py pise verify v eurobasket.json PO tem skriptu. Ker tukaj
+# bazo regeneriramo iz nic, bi brez tega izgubili potrjene linke, katerih
+# novica je medtem izginila iz feeda. Zato jih preberemo in prenesemo naprej.
+prev_verify = {}
+EB_PATH = f'{OUTDIR}/eurobasket.json'
+if os.path.exists(EB_PATH):
+    try:
+        prevdata = json.load(open(EB_PATH, encoding='utf-8'))
+        for it in prevdata.get('items', []):
+            if it.get('verify') and it['verify'].get('url'):
+                prev_verify[it['id']] = it['verify']
+    except (json.JSONDecodeError, UnicodeDecodeError, KeyError):
+        prev_verify = {}
+
+# Full — z isNew + firstSeen + ohranjen verify
 app_items = []
 for r in clean:
     obj = to_app(r)
@@ -193,6 +208,10 @@ for r in clean:
         obj['isNew'] = True
     if r.get('to') and aid in seen:
         obj['firstSeen'] = seen[aid]
+    # prenesi obstojeco potrditev (z linkom) naprej; verify_transfers.py jo
+    # lahko kasneje nadgradi, a je nikoli ne degradira
+    if obj['id'] in prev_verify:
+        obj['verify'] = prev_verify[obj['id']]
     app_items.append(obj)
 json.dump({'generated_at': d['generated'], 'schema_version': 1, 'source': 'Eurobasket master',
            'season': '2025-2026', 'count': len(app_items), 'items': app_items},
