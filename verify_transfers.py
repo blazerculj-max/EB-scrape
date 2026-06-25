@@ -49,6 +49,9 @@ FEEDS = [
     ("Eurohoops-ES",   "https://www.eurohoops.net/basket/spain/feed/"),  # ACB / spanska kosarka
     ("Gigantes-ES",    "https://www.gigantes.com/feed/"),                # spanska kos. revija
     ("Solobasket-ES",  "https://www.solobasket.com/feed"),
+    # slovenski viri (prestopi domacih in slovenskih igralcev v tujini)
+    ("SLO-kosarka",    "https://slovenska-kosarka.com/feed/"),
+    ("KZS",            "https://www.kzs.si/feed/"),
 ]
 
 HEADERS = {
@@ -74,13 +77,18 @@ SIGN_WORDS = [
     r'firma', r'firmato', r'ufficiale', r'ingaggi(a|o|ato)', r'accordo', r'preso',
     # ES
     r'fich(a|aje|ado)', r'firma', r'oficial', r'acuerdo', r'incorpora', r'refuerzo', r'nuevo jugador',
-    # govorica (NE potrditev) — za locevanje
+    # SLO (potrjen prestop) — pisemo brez sumnikov, ker text/raw normaliziramo ohlapno
+    r'podpis(al|ala|ali|el)?', r'prestopil', r'prestopila', r'prihaja', r'pripeljal(i)?',
+    r'okrepil(i)?', r'okrepili', r'vraca se', r'vrnil se', r'novi clan', r'nova okrepitev',
+    r'uradno', r'sklenil', r'podaljsal', r'ostaja',
 ]
 RUMOR_WORDS = [
     r'rumou?r', r'interest(ed)?', r'in talks', r'talks with', r'linked', r'could', r'reportedly',
     r'set to', r'eyeing', r'target', r'monitoring', r'pursuing', r'close to', r'considering',
     r'interess(e|ato)', r'trattativa', r'sondaggio',
     r'interes', r'suena', r'pretende', r'negocia', r'podr[ií]a',
+    # SLO (govorica)
+    r'zanima', r'naj bi', r'menda', r'govorice', r'blizu', r'pogaja', r'v igri za',
 ]
 SIGN_RE  = re.compile(r'\b(' + '|'.join(SIGN_WORDS) + r')\b', re.I)
 RUMOR_RE = re.compile(r'\b(' + '|'.join(RUMOR_WORDS) + r')\b', re.I)
@@ -202,18 +210,31 @@ def verify_move(rec, news):
         if needs_first:
             if not first or first not in toks:
                 continue
-        # vsaj en klubski token mora biti CELA BESEDA in BLIZU priimka
+        # vsaj en klubski token mora biti BLIZU priimka.
+        # Ujemanje po KORENU (prefiks), da pokrijemo sklanjatev:
+        # rogaska/rogasko, olimpija/olimpijo, krka/krko...
+        def stem(w):
+            # odrezi koncnico (zadnji 1-2 znaka) za daljse besede
+            return w[:-2] if len(w) >= 6 else (w[:-1] if len(w) >= 4 else w)
         near = False
         for cpos_target in cl:
-            for c_i in _word_positions(toks, cpos_target):
+            ct_stem = stem(cpos_target)
+            if len(ct_stem) < 3:
+                # prekratko za korenski match -> zahtevaj celo besedo
+                positions = _word_positions(toks, cpos_target)
+            else:
+                positions = [i for i, w in enumerate(toks) if w.startswith(ct_stem) or ct_stem.startswith(w[:len(ct_stem)]) and len(w) >= 4]
+            for c_i in positions:
                 if any(abs(c_i - s_i) <= WINDOW for s_i in s_pos):
                     near = True; break
             if near: break
         if not near:
             continue
         # ime+klub sta blizu — klasificiraj
-        is_sign  = bool(SIGN_RE.search(n["raw"]))
-        is_rumor = bool(RUMOR_RE.search(n["raw"]))
+        # signalne besede iscemo na normaliziranem besedilu (brez naglasov),
+        # da slovenske/ostale naglasene oblike (vraca, podaljsal) ujamemo
+        is_sign  = bool(SIGN_RE.search(n["text"]))
+        is_rumor = bool(RUMOR_RE.search(n["text"]))
         rank = 2 if (is_sign and not is_rumor) else 1
         if best is None or rank > best[0]:
             best = (rank, n)

@@ -200,19 +200,74 @@ if os.path.exists(EB_PATH):
         prev_verify = {}
 
 # Full — z isNew + firstSeen + ohranjen verify
-app_items = []
+# DEDUP: isti prestop se v Eurobasketu pojavi veckrat (pod drzavo izvora IN
+# pod tekmovanji kot BCL/BNXT). Vsi delijo isti app_id. Obdrzimo enega —
+# prednostno zapis iz DRZAVE (isComp=False), ne iz tekmovanja.
+by_id = {}
+order = []
 for r in clean:
+    # roster zapisov (brez 'to') NE dedupliciramo — legitimno se ponovijo
+    if not r.get('to'):
+        order.append(('keep', r)); continue
+    aid = app_id(r)
+    if aid not in by_id:
+        by_id[aid] = r
+        order.append(('id', aid))
+    else:
+        # ze imamo prestop s tem id; zamenjaj samo ce je obstojeci iz tekmovanja
+        # in nov iz prave drzave (boljsi izvor). Sicer preskoci (dvojnik).
+        if by_id[aid].get('isComp') and not r.get('isComp'):
+            by_id[aid] = r
+
+app_items = []
+seen_ids = set()
+for kind, val in order:
+    if kind == 'keep':
+        r = val
+    else:
+        aid = val
+        if aid in seen_ids:
+            continue
+        seen_ids.add(aid)
+        r = by_id[aid]
     obj = to_app(r)
     aid = app_id(r)
     if aid in new_ids:
         obj['isNew'] = True
     if r.get('to') and aid in seen:
         obj['firstSeen'] = seen[aid]
-    # prenesi obstojeco potrditev (z linkom) naprej; verify_transfers.py jo
-    # lahko kasneje nadgradi, a je nikoli ne degradira
     if obj['id'] in prev_verify:
         obj['verify'] = prev_verify[obj['id']]
     app_items.append(obj)
+
+# 2. stopnja dedup: isti IGRALEC + isti CILJ a razlicen izvor (Eurobasket
+# istega igralca vcasih navede z razlicnim prejsnjim klubom). Skoraj zagotovo
+# isti prestop -> obdrzimo enega, prednostno zapis iz prave drzave.
+def _norm(s): return (s or '').strip().lower()
+dedup2 = {}
+result = []
+for obj in app_items:
+    if obj.get('status') == 'roster' or not obj.get('to'):
+        result.append(obj); continue
+    key = (_norm(obj.get('player')), _norm(obj.get('to')))
+    if key not in dedup2:
+        dedup2[key] = len(result)
+        result.append(obj)
+    else:
+        idx = dedup2[key]
+        prev = result[idx]
+        # zamenjaj le, ce je obstojeci iz tekmovanja, nov pa iz prave drzave
+        prev_comp = '·' in (prev.get('league') or '') and any(
+            c in (prev.get('league') or '') for c in ['BCL','BNXT','EvroLiga','EuroLeague','EuroCup','FIBA Europe Cup','Liga prvakov'])
+        new_comp = '·' in (obj.get('league') or '') and any(
+            c in (obj.get('league') or '') for c in ['BCL','BNXT','EvroLiga','EuroLeague','EuroCup','FIBA Europe Cup','Liga prvakov'])
+        if prev_comp and not new_comp:
+            # ohrani firstSeen/verify od prejsnjega, a vzemi boljsi izvor
+            if 'firstSeen' in prev and 'firstSeen' not in obj: obj['firstSeen'] = prev['firstSeen']
+            if 'verify' in prev and 'verify' not in obj: obj['verify'] = prev['verify']
+            if prev.get('isNew'): obj['isNew'] = True
+            result[idx] = obj
+app_items = result
 json.dump({'generated_at': d['generated'], 'schema_version': 1, 'source': 'Eurobasket master',
            'season': '2025-2026', 'count': len(app_items), 'items': app_items},
           open(f'{OUTDIR}/eurobasket.json','w',encoding='utf-8'), ensure_ascii=False, separators=(',',':'))
