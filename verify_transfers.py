@@ -53,13 +53,9 @@ FEEDS = [
     ("SLO-kosarka",    "https://slovenska-kosarka.com/feed/"),
     ("KZS",            "https://www.kzs.si/feed/"),
     # nacionalne lige (preverjeni / mocan WordPress /feed/ vzorec)
-    ("PianetaBasket",  "https://www.pianetabasket.com/rss/"),               # LBA Italija (uraden RSS)
-    ("Sport24-GR",     "https://www.sport24.gr/feed/"),                      # GBL Grcija
-    ("AllStarBasket",  "https://www.allstarbasket.gr/feed/"),               # GBL Grcija
+    ("PianetaBasket",  "https://www.pianetabasket.com/feed/"),               # LBA Italija (WP /feed/)
     ("BeBasket-FR",    "https://www.bebasket.fr/feed/"),                     # Betclic ELITE / Pro A Francija
-    ("BBall-World",    "https://www.basketball-world.news/feed/"),          # BBL Nemcija
     ("SuperBasket-PL", "https://super-basket.pl/feed/"),                    # PLK Poljska
-    ("BasketFaul-TR",  "https://basketfaul.com.tr/feed/"),                  # BSL Turcija
     ("BaschetRO",      "https://baschetromania.ro/feed/"),                  # Romunija
     ("RealGM-Intl",    "https://basketball.realgm.com/rss/wiretap/0/0.xml"), # mednarodne transakcije
 ]
