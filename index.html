@@ -437,8 +437,9 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
       <option value="News">News</option>
     </select>
     <select class="db-fsel" id="dbDiffF" onchange="filterDB()">
-      <option value="">Vse zahtevnosti</option>
-      <option>Easy</option><option>Medium</option><option>Hard</option>
+      <option value="">Vsi statusi</option>
+      <option value="RSS ✓">Potrjen RSS</option>
+      <option value="RSS ?">Negotov RSS</option>
     </select>
     <div class="db-export">
       <button class="exp-btn primary" onclick="exportJSON()">⬇ JSON</button>
@@ -447,11 +448,11 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
     </div>
   </div>
   <div class="db-stats">
-    <span class="db-stat">Vseh vnosov: <span id="dbTotal">0</span></span>
+    <span class="db-stat">Vseh virov: <span id="dbTotal">0</span></span>
     <span class="db-stat">Prikazanih: <span id="dbVisible">0</span></span>
-    <span class="db-stat">Lahko: <span id="dbEasy">0</span></span>
-    <span class="db-stat">Srednje: <span id="dbMed">0</span></span>
-    <span class="db-stat">Težko: <span id="dbHard">0</span></span>
+    <span class="db-stat">Potrjeni: <span id="dbEasy">0</span></span>
+    <span class="db-stat">Negotovi: <span id="dbMed">0</span></span>
+    <span class="db-stat" style="display:none">Težko: <span id="dbHard">0</span></span>
   </div>
   <div class="tbl-wrap"><table id="dbTable">
     <thead><tr>
@@ -480,42 +481,37 @@ function showPage(id, btn) {
 // DATABASE DATA — VERIFIED URLs
 // ═══════════════════════════════════════════════════════
 const DB = [
-  // ── LEAGUE OFFICIAL NEWS PAGES ──
-  {cat:'EuroLeague',  league:'EuroLeague',  name:'EuroLeague Official News',     url:'https://www.euroleaguebasketball.net/en/euroleague/news/', path:'/en/euroleague/news/',       diff:'Easy ⭐'},
-  {cat:'EuroCup',     league:'EuroCup',     name:'EuroCup Official News',         url:'https://www.euroleaguebasketball.net/eurocup/news/',     path:'/eurocup/news/',             diff:'Easy ⭐'},
-  {cat:'BCL',         league:'BCL',         name:'BCL Official News',             url:'https://www.championsleague.basketball/en/news/',        path:'/en/news/',                  diff:'Easy ⭐'},
-  {cat:'ABA',         league:'ABA League',  name:'ABA Liga News (page 1)',        url:'https://www.aba-liga.com/newslist/News/1/',              path:'/newslist/News/1/',           diff:'Easy ⭐'},
-  {cat:'ABA',         league:'ABA League',  name:'ABA Liga News (page 2)',        url:'https://www.aba-liga.com/newslist/News/2/',              path:'/newslist/News/2/',           diff:'Easy ⭐'},
-  {cat:'ABA',         league:'ABA League',  name:'ABA Liga Clubs News',          url:'https://www.aba-liga.com/newslist/Clubs/1/',             path:'/newslist/Clubs/1/',          diff:'Easy ⭐'},
-  {cat:'Germany',     league:'BBL',         name:'BBL / basketball-world.news',  url:'https://www.basketball-world.news',                     path:'/transferboerse',            diff:'Easy ⭐'},
-  {cat:'Spain',       league:'ACB',         name:'ACB Official News',             url:'https://www.acb.com/es/liga/noticias',                  path:'/es/liga/noticias',           diff:'Easy ⭐'},
-  {cat:'Spain',       league:'ACB',         name:'AS.com Baloncesto ACB',         url:'https://as.com/baloncesto/acb/',                        path:'/baloncesto/acb/',            diff:'Medium'},
-  {cat:'France',      league:'Pro A',       name:'bebasket.fr Betclic ELITE',     url:'https://www.bebasket.fr/ligue/betclic-elite',           path:'/ligue/betclic-elite',        diff:'Easy ⭐'},
-  {cat:'France',      league:'Pro A',       name:'bebasket.fr Transferts',        url:'https://www.bebasket.fr/ligue/betclic-elite/tableau-transferts', path:'/ligue/betclic-elite/tableau-transferts', diff:'Easy ⭐'},
-  {cat:'Italy',       league:'Lega',        name:'Lega Basket Official News',     url:'https://www.legabasket.it/news',                        path:'/news',                      diff:'Medium'},
-  {cat:'Italy',       league:'Lega',        name:'Pianeta Basket LBA',            url:'https://www.pianetabasket.com/legabasket-serie-a/',     path:'/legabasket-serie-a/',        diff:'Easy ⭐'},
-  {cat:'Greece',      league:'GBL',         name:'sport24.gr Basket League',      url:'https://www.sport24.gr/tag/basket-league/',            path:'/tag/basket-league/',         diff:'Medium (Greek)'},
-  {cat:'Turkey',      league:'Turkish BSL', name:'basketbolig.com BSL',           url:'https://basketbolig.com/kategori/basketbol-super-ligi', path:'/kategori/basketbol-super-ligi', diff:'Easy (Turkish)'},
-  {cat:'Turkey',      league:'Turkish BSL', name:'basketfaul.com.tr BSL',         url:'https://basketfaul.com.tr/category/turkiye/bsl/',       path:'/category/turkiye/bsl/',      diff:'Easy (Turkish)'},
-  {cat:'Romania',     league:'Romanian LNB',name:'baschetromania.ro',             url:'https://baschetromania.ro/',                            path:'/',                           diff:'Easy ⭐'},
-  {cat:'Poland',      league:'PLK',         name:'PLK Official News',             url:'https://plk.pl/aktualnosci',                           path:'/aktualnosci',                diff:'Easy ⭐'},
-  {cat:'Poland',      league:'PLK',         name:'super-basket.pl PLK',           url:'https://super-basket.pl/plk/',                         path:'/plk/',                       diff:'Easy (Polish)'},
-  {cat:'Hungary',     league:'Hungarian NB1',name:'bball1.hu NB1 Transfers',      url:'https://bball1.hu/atigazolasi-hirosszefoglalo-2026/',   path:'/atigazolasi-hirosszefoglalo-2026/', diff:'Medium (Hungarian)'},
-  {cat:'Hungary',     league:'Hungarian NB1',name:'bball1.hu',                    url:'https://bball1.hu/',                                   path:'/',                           diff:'Medium (Hungarian)'},
-  {cat:'Croatia',     league:'Croatian HKL',name:'basketball.hr',                 url:'https://basketball.hr/',                               path:'/',                           diff:'Medium (Croatian)'},
-  {cat:'Croatia',     league:'Croatian HKL',name:'jutarnji.hr Košarka',           url:'https://www.jutarnji.hr/sportske/kosarka/hrvatska-liga', path:'/sportske/kosarka/hrvatska-liga', diff:'Medium (Croatian)'},
-  {cat:'BNXT',        league:'BNXT',        name:'BNXT League News',              url:'https://bnxtleague.com/en/news',                        path:'/en/news',                    diff:'Hard (JS only)'},
-  {cat:'Lithuania',   league:'LKL',         name:'BasketNews LKL Transfer Hub',  url:'https://www.basketnews.lt/news-248448-basketnews-lkl-vasaros-turgus-atnaujinta-0618.html', path:'/naujienos.html', diff:'Medium (Lithuanian)'},
-  {cat:'Israel',      league:'Israeli BSL', name:'basket.co.il (English)',        url:'https://basket.co.il/archive.asp?typeID=1&lang=en',    path:'/archive.asp?typeID=1&lang=en', diff:'Easy ⭐'},
-  // ── NEWS AGGREGATORS ──
-  {cat:'News',        league:'News',        name:'Sportando',                     url:'https://sportando.basketball/en/',                      path:'/en/typology/official/',      diff:'Easy ⭐'},
-  {cat:'News',        league:'News',        name:'Eurohoops',                     url:'https://www.eurohoops.net/en/',                         path:'/en/trademarks/transfers/',   diff:'Easy ⭐'},
-  {cat:'News',        league:'News',        name:'TalkBasket',                    url:'https://www.talkbasket.net/transfers',                  path:'/transfers',                  diff:'Easy ⭐'},
-  {cat:'News',        league:'News',        name:'BasketNews.com (EL Tracker)',   url:'https://basketnews.com/news-248207-euroleague-transfer-market-2026-rosters-signings-rumors.html', path:'/', diff:'Easy ⭐'},
-  {cat:'News',        league:'News',        name:'Gigantes (Spain)',              url:'https://www.gigantes.com/liga-endesa/',                 path:'/liga-endesa/',               diff:'Easy (Spanish)'},
-  {cat:'News',        league:'News',        name:'AllStarBasket GBL Transfers',  url:'https://www.allstarbasket.gr/ellada/greek-basketball-league/transfer-market-oi-kiniseis-ton-14-omadon-tis-gbl', path:'/', diff:'Medium (Greek)'},
-  {cat:'News',        league:'News',        name:"RealGM Int'l Transactions",   url:'https://basketball.realgm.com/international/transactions', path:'/international/transactions', diff:'Easy ⭐'},
-  {cat:'News',        league:'News',        name:'Eurobasket.com BNXT Transfers',url:'https://www.eurobasket.com/BNXT-League/basketball-Transfers.aspx', path:'/BNXT-League/basketball-Transfers.aspx', diff:'Easy'},
+  // ── PAN-EVROPSKI AGREGATORJI ──
+  {cat:'Agregator', league:'Pan-EU',     name:'Sportando',                 url:'https://sportando.basketball/en/feed/',                          path:'/en/feed/',        diff:'RSS ✓'},
+  {cat:'Agregator', league:'Pan-EU',     name:'Sportando — govorice',      url:'https://sportando.basketball/en/rumors/basket-rumors/feed/',     path:'/rumors/feed/',    diff:'RSS ✓'},
+  {cat:'Agregator', league:'Pan-EU',     name:'Sportando — transakcije',   url:'https://sportando.basketball/en/basketball-transactions/feed/',  path:'/transactions/',   diff:'RSS ✓'},
+  {cat:'Agregator', league:'Pan-EU',     name:'Eurohoops',                 url:'https://www.eurohoops.net/en/feed/',                             path:'/en/feed/',        diff:'RSS ✓'},
+  {cat:'Agregator', league:'Pan-EU',     name:'BallinEurope',              url:'https://www.ballineurope.com/feed/',                             path:'/feed/',           diff:'RSS ✓'},
+  // ── URADNA TEKMOVANJA (prek TalkBasket, uradni partner EuroLeague + FIBA) ──
+  {cat:'Tekmovanje', league:'EuroLeague', name:'TalkBasket — EuroLeague',   url:'https://www.talkbasket.net/euroleague/feed',                     path:'/euroleague/feed', diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'EuroCup',    name:'TalkBasket — EuroCup',      url:'https://www.talkbasket.net/eurocup/feed',                        path:'/eurocup/feed',    diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'BCL',        name:'TalkBasket — BCL',          url:'https://www.talkbasket.net/bcl/feed',                            path:'/bcl/feed',        diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'FIBA EC',    name:'TalkBasket — FIBA Europe Cup', url:'https://www.talkbasket.net/category/fiba-europe-cup/feed',     path:'/fiba-europe-cup/',diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'Reprezent.', name:'TalkBasket — reprezentance',url:'https://www.talkbasket.net/fiba/feed',                           path:'/fiba/feed',       diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'Domace lige',name:'TalkBasket — domace lige',  url:'https://www.talkbasket.net/domestic/feed',                       path:'/domestic/feed',   diff:'RSS ✓'},
+  {cat:'Tekmovanje', league:'Prestopi',   name:'TalkBasket — prestopi',     url:'https://www.talkbasket.net/transfers/feed',                      path:'/transfers/feed',  diff:'RSS ✓'},
+  // ── NACIONALNE LIGE ──
+  {cat:'Italija',   league:'LBA',        name:'Sportando IT',              url:'https://www.sportando.basketball/it/feed/',                      path:'/it/feed/',        diff:'RSS ✓'},
+  {cat:'Italija',   league:'LBA',        name:'Pianeta Basket',            url:'https://www.pianetabasket.com/rss/',                             path:'/rss/',            diff:'RSS ✓'},
+  {cat:'Spanija',   league:'ACB',        name:'Eurohoops ES',              url:'https://www.eurohoops.net/basket/spain/feed/',                   path:'/basket/spain/',   diff:'RSS ✓'},
+  {cat:'Spanija',   league:'ACB',        name:'Gigantes',                  url:'https://www.gigantes.com/feed/',                                 path:'/feed/',           diff:'RSS ✓'},
+  {cat:'Spanija',   league:'ACB',        name:'Solobasket',                url:'https://www.solobasket.com/feed',                                path:'/feed',            diff:'RSS ✓'},
+  {cat:'Grcija',    league:'GBL',        name:'sport24.gr',                url:'https://www.sport24.gr/feed/',                                   path:'/feed/',           diff:'RSS ?'},
+  {cat:'Grcija',    league:'GBL',        name:'AllStarBasket',             url:'https://www.allstarbasket.gr/feed/',                             path:'/feed/',           diff:'RSS ?'},
+  {cat:'Francija',  league:'Betclic ELITE', name:'BeBasket',              url:'https://www.bebasket.fr/feed/',                                  path:'/feed/',           diff:'RSS ?'},
+  {cat:'Nemcija',   league:'BBL',        name:'basketball-world.news',     url:'https://www.basketball-world.news/feed/',                        path:'/feed/',           diff:'RSS ?'},
+  {cat:'Poljska',   league:'PLK',        name:'super-basket.pl',           url:'https://super-basket.pl/feed/',                                  path:'/feed/',           diff:'RSS ?'},
+  {cat:'Turcija',   league:'BSL',        name:'basketfaul.com.tr',         url:'https://basketfaul.com.tr/feed/',                                path:'/feed/',           diff:'RSS ?'},
+  {cat:'Romunija',  league:'LNB',        name:'baschetromania.ro',         url:'https://baschetromania.ro/feed/',                                path:'/feed/',           diff:'RSS ?'},
+  {cat:'Mednar.',   league:'Transakcije',name:'RealGM',                    url:'https://basketball.realgm.com/rss/wiretap/0/0.xml',              path:'/rss/wiretap/',    diff:'RSS ?'},
+  // ── SLOVENIJA ──
+  {cat:'Slovenija', league:'Liga OTP / SKL', name:'slovenska-kosarka.com', url:'https://slovenska-kosarka.com/feed/',                          path:'/feed/',           diff:'RSS ✓'},
+  {cat:'Slovenija', league:'KZS',        name:'Kosarkarska zveza Slovenije', url:'https://www.kzs.si/feed/',                                     path:'/feed/',           diff:'RSS ?'},
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -530,8 +526,8 @@ const BADGE_MAP = {
 function lbCls(l) { return BADGE_MAP[l] || 'lb-nat'; }
 
 function diffCls(d) {
-  if (d.startsWith('Easy')) return 'd-easy';
-  if (d.startsWith('Medium')) return 'd-med';
+  if (d.includes('✓')) return 'd-easy';
+  if (d.includes('?')) return 'd-med';
   return 'd-hard';
 }
 
@@ -550,7 +546,7 @@ function filterDB() {
     const txt = fold(r.name + r.league + r.cat + r.url + (r.city||''));
     if (q && !txt.includes(q)) return false;
     if (lf && r.cat !== lf) return false;
-    if (df && !r.diff.startsWith(df)) return false;
+    if (df && r.diff !== df) return false;
     return true;
   }).sort((a, b) => {
     const av = (a[dbSort.col]||'').toLowerCase();
@@ -571,9 +567,9 @@ function filterDB() {
 
   document.getElementById('dbTotal').textContent = DB.length;
   document.getElementById('dbVisible').textContent = filtered.length;
-  document.getElementById('dbEasy').textContent = filtered.filter(r=>r.diff.startsWith('Easy')).length;
-  document.getElementById('dbMed').textContent = filtered.filter(r=>r.diff.startsWith('Medium')).length;
-  document.getElementById('dbHard').textContent = filtered.filter(r=>r.diff.startsWith('Hard')).length;
+  document.getElementById('dbEasy').textContent = filtered.filter(r=>r.diff.includes('✓')).length;
+  document.getElementById('dbMed').textContent = filtered.filter(r=>r.diff.includes('?')).length;
+  document.getElementById('dbHard').textContent = 0;
 }
 
 // Export
