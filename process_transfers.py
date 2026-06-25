@@ -244,6 +244,11 @@ for kind, val in order:
 # istega igralca vcasih navede z razlicnim prejsnjim klubom). Skoraj zagotovo
 # isti prestop -> obdrzimo enega, prednostno zapis iz prave drzave.
 def _norm(s): return (s or '').strip().lower()
+# oznake tekmovanj (vse jezikovne razlicice), da prepoznamo "slabsi" izvor
+_COMP_MARKERS = ['BCL','BNXT','EvroLiga','EuroLeague','EvroPokal','EuroCup',
+                 'FIBA Europe Cup','Liga prvakov','Liga ABA','ABA','VTB','Champions League']
+def _is_comp_league(league):
+    return any(c in (league or '') for c in _COMP_MARKERS)
 dedup2 = {}
 result = []
 for obj in app_items:
@@ -256,11 +261,8 @@ for obj in app_items:
     else:
         idx = dedup2[key]
         prev = result[idx]
-        # zamenjaj le, ce je obstojeci iz tekmovanja, nov pa iz prave drzave
-        prev_comp = '·' in (prev.get('league') or '') and any(
-            c in (prev.get('league') or '') for c in ['BCL','BNXT','EvroLiga','EuroLeague','EuroCup','FIBA Europe Cup','Liga prvakov'])
-        new_comp = '·' in (obj.get('league') or '') and any(
-            c in (obj.get('league') or '') for c in ['BCL','BNXT','EvroLiga','EuroLeague','EuroCup','FIBA Europe Cup','Liga prvakov'])
+        prev_comp = _is_comp_league(prev.get('league'))
+        new_comp = _is_comp_league(obj.get('league'))
         if prev_comp and not new_comp:
             # ohrani firstSeen/verify od prejsnjega, a vzemi boljsi izvor
             if 'firstSeen' in prev and 'firstSeen' not in obj: obj['firstSeen'] = prev['firstSeen']
