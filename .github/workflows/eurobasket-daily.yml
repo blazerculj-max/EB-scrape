@@ -44,11 +44,17 @@ jobs:
         run: python verify_transfers.py transfers_data
         continue-on-error: true
 
+      # 3b) Izlusci prestope IZ RSS novic (loceni zavihek v aplikaciji)
+      - name: RSS prestopi
+        run: python rss_transfers.py transfers_data/rss_transfers.json
+        continue-on-error: true
+
       # 4) Kopiraj rezultata poleg index.html (koren repa)
       - name: Kopiraj JSON poleg strani
         run: |
           cp transfers_data/eurobasket.json     ./eurobasket.json
           cp transfers_data/eurobasket_new.json ./eurobasket_new.json
+          cp transfers_data/rss_transfers.json  ./rss_transfers.json || echo "ni rss_transfers.json"
 
       # 5) Commit nazaj v repo SAMO ce so spremembe.
       #    [skip ci] v sporocilu prepreci morebitne verizne sprozitve.
@@ -56,7 +62,7 @@ jobs:
         run: |
           git config user.name  "eurobasket-bot"
           git config user.email "actions@github.com"
-          git add eurobasket.json eurobasket_new.json transfers_data/
+          git add eurobasket.json eurobasket_new.json rss_transfers.json transfers_data/ 2>/dev/null || git add eurobasket.json eurobasket_new.json transfers_data/
           if git diff --staged --quiet; then
             echo "Ni sprememb — brez commita."
           else
