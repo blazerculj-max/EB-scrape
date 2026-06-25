@@ -45,6 +45,10 @@ _PATTERNS = [
     (re.compile(r'^(?P<club>[A-Z][\w\u00C0-\u024F.\'\- ]{2,30}?)\s+'
                 r'(?:officially\s+)?(?:sign|signs|signed|lands?|adds?|acquires?|inks?|completes?\s+(?:signing\s+of)?)\s+'
                 r'(?P<player>[A-Z][\w\u00C0-\u024F.\'\- ]{2,30})', re.I), 'club_first'),
+    # "Player signs/inks (... deal) with Club" — dovoli besede med signal in klubom
+    (re.compile(r'^(?P<player>[A-Z][\w\u00C0-\u024F.\'\- ]{2,30}?)\s+'
+                r'(?:signs?|signed|inks?)\s+(?:[\w\-]+\s+){0,3}?(?:deal\s+)?with\s+'
+                r'(?P<club>[A-Z][\w\u00C0-\u024F.\'\- ]{2,30})', re.I), 'player_deal'),
     # "Player signs/joins (with) Club"
     (re.compile(r'^(?P<player>[A-Z][\w\u00C0-\u024F.\'\- ]{2,30}?)\s+'
                 r'(?:signs?|signed|joins?|joined|inks?\s+deal\s+with|heads?\s+to|moves?\s+to|returns?\s+to)\s+'
@@ -81,19 +85,81 @@ _RUMOR_HINT = re.compile(r'\b(rumou?r|reportedly|interested|interest|talks|linke
                          r'interess|trattativa|suena|interes|podr[ií]a)\b', re.I)
 
 # ocitno NE-prestop naslovi (filtriraj ven)
-_NOISE = re.compile(r'\b(beats?|defeats?|wins?|loses?|score|game|match|preview|'
+_NOISE = re.compile(r'\b(beats?|defeats?|wins?|loses?|lost|score|game|match|preview|'
                     r'recap|highlights?|MVP|award|injury|injured|suspend|'
                     r'retire|dies|passed\s+away|coach\s+of\s+the|power\s+rankings|'
-                    r'standings|playoff|final\s+four|round\s+\d)\b', re.I)
+                    r'standings|playoff|final\s+four|round\s+\d|'
+                    # dodatni ne-prestop glagoli (iz pravih napak)
+                    r'apologi[sz]es|stuns?|crushes?|leads?|explains?|responds?|'
+                    r'moves?\s+closer|hints?\s+at|had\s+to|commits?\s+to|'
+                    r'open\s+to|nearing|expected\s+to\s+become|set\s+to\s+become|'
+                    r'reportedly\s+sign|draw\s+to|fail(s|ed)?\s+to|book|reach|'
+                    r'vows?|intends?\s+to|ready\s+to|passed\s+on|'
+                    r'president|citizenship|ownership|qualifying\s+squad|'
+                    r'miss\s+|decision\s+to|talks?\s+nba|super\s+excited)\b', re.I)
 
 # besede, ki niso klubi (da ne lovimo "Player to EuroLeague")
 _NOT_CLUB = {'euroleague','eurocup','bcl','nba','europe','fiba','the','his','her',
              'free','agency','agent','team','squad','roster','contract','deal',
-             'liga','league','serie','acb','lega','this','that','here','there'}
+             'liga','league','serie','acb','lega','this','that','here','there',
+             'european','greece','turkey','spain','italy','france','slovenia',
+             'lakers','nuggets','cavs','pistons','grizzlies','thunder','bulls',
+             'usa','team usa','china','australia','puerto'}
+
+# besede, ki ne smejo biti ZACETEK imena igralca (predlogi, clenki, prefiksi)
+_BAD_NAME_START = {'with','for','to','a','an','the','of','on','in','at','and',
+                   'multi-year','two-year','three-year','four-year','former',
+                   'deal','pole','guard','center','forward','star','veteran'}
+
+# narodnost/vloga prefiksi za odstranitev z zacetka imena
+_NAME_PREFIX = re.compile(r'^(former\s+[\w\s]+?\s+player\s+|pole\s+|guard\s+|'
+                          r'center\s+|forward\s+|star\s+|veteran\s+|'
+                          r'nba\s+|ex-?nba\s+)', re.I)
 
 
 def clean_token(s):
-    return re.sub(r'\s+', ' ', (s or '')).strip(' .,:-–—')
+    s = re.sub(r'\s+', ' ', (s or '')).strip(' .,:-–—')
+    # odstrani narodnost/vlogo prefiks iz imena
+    s = _NAME_PREFIX.sub('', s).strip()
+    # odstrani glagolske/predlozne prefikse iz kluba (join/to/with/for/at)
+    s = re.sub(r'^(join|joins|to\s+join|with|for|at|to|deal\s+with|'
+               r'a\s+\w+\s+deal\s+with|multi-year\s+deal\s+with)\s+', '', s, flags=re.I).strip()
+    return s
+
+
+def _valid_name(name):
+    """Ime mora biti videti kot osebno ime: 2-4 besede, brez predlogov na zacetku."""
+    if not name:
+        return False
+    words = name.split()
+    if len(words) < 2 or len(words) > 4:  # ime priimek (1-2 dela vsak)
+        return False
+    if words[0].lower() in _BAD_NAME_START:
+        return False
+    # vse besede morajo imeti veliko zacetnico (osebno ime)
+    if not all(w[0].isupper() for w in words if w):
+        return False
+    # zavrni, ce vsebuje stevilke ali tipicne ne-ime besede
+    if re.search(r'\d', name):
+        return False
+    return True
+
+
+def _valid_club(club):
+    if not club:
+        return False
+    if club.lower() in _NOT_CLUB:
+        return False
+    if club.split()[0].lower() in _BAD_NAME_START:
+        return False
+    if len(club) < 3 or len(club.split()) > 4:
+        return False
+    # zavrni klube z genericnimi ne-klub besedami
+    if re.search(r'\b(squad|project|list|future|moment|spot|semifinals?|'
+                 r'title|deal|career|opportunity|citizenship|ownership|'
+                 r'group|cup|games?|season|summer|coach|president)\b', club, re.I):
+        return False
+    return True
 
 
 def _fold(s):
@@ -122,11 +188,7 @@ def extract_transfer(title):
         # vzemi izvirni izrez (iste pozicije v orig in folded — folding ne meni dolzine)
         player = clean_token(orig[m.start('player'):m.end('player')])
         club = clean_token(orig[m.start('club'):m.end('club')])
-        if not player or not club:
-            continue
-        if club.lower() in _NOT_CLUB or player.lower() in _NOT_CLUB:
-            continue
-        if len(player) < 3 or len(club) < 3:
+        if not _valid_name(player) or not _valid_club(club):
             continue
         is_rumor = (kind in ('club_rumor', 'player_rumor')) or bool(_RUMOR_HINT.search(folded))
         return (player, club, is_rumor)
@@ -149,7 +211,13 @@ def main():
         return
 
     seen = {}
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=75)).strftime('%Y-%m-%d')
     for n in news:
+        # preskoci stare novice (TalkBasket feedi vracajo tudi arhiv 2014+)
+        nd = n.get('date') or ''
+        if nd and nd < cutoff:
+            continue
         res = extract_transfer(n['title'])
         if not res:
             continue
