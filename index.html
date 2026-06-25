@@ -188,6 +188,12 @@ a.vbadge:hover{filter:brightness(1.1);text-decoration:underline}
 .vlink-soft{background:var(--yellow-bg);color:var(--yellow);border-color:rgba(200,135,10,.35)}
 .vlink-soft:hover{background:var(--yellow);color:#fff;border-color:var(--yellow)}
 .vno{font-family:var(--mono);font-size:9px;color:var(--text3);padding:3px 0;opacity:.7}
+.rss-head{padding:18px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.rss-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px}
+.rss-sub{font-size:12px;color:var(--text2);max-width:600px;line-height:1.5}
+.rss-stats{display:flex;gap:16px;flex-shrink:0}
+.rss-stat{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.rss-stat b{font-family:'Syne',sans-serif;font-size:20px;color:var(--text);display:block}
 .tmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:80px}
 .tdate{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
 .tsrc{font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;display:block}
@@ -296,6 +302,7 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
   <div class="logo">Euro<span>Ball</span></div>
   <div class="tabs">
     <button class="tab on" onclick="showPage('tracker',this)">Prestopi</button>
+    <button class="tab" onclick="showPage('rss',this)">RSS & govorice</button>
     <button class="tab" onclick="showPage('db',this)">Viri</button>
   </div>
   <div class="nav-right">
@@ -406,6 +413,33 @@ td{padding:10px 12px;vertical-align:middle;font-size:13px;color:var(--text)}
 <!-- ══════════════════════════════════════════════
      DATABASE PAGE
 ══════════════════════════════════════════════ -->
+<div class="page" id="p-rss">
+  <div class="rss-head">
+    <div class="rss-intro">
+      <div class="rss-title">Prestopi iz novic</div>
+      <div class="rss-sub">Zaznani iz RSS naslovov, ki jih Eurobasket (še) nima. <span style="color:var(--yellow)">Rumeno = govorica</span> (klub zanima igralec ipd.). Ko Eurobasket potrdi prestop, se premakne v zavihek <strong>Prestopi</strong>.</div>
+    </div>
+    <div class="rss-stats" id="rssStats"></div>
+  </div>
+  <div class="filter-bar" style="border-top:1px solid var(--border)">
+    <div class="sw">
+      <span class="sw-icon">🔍</span>
+      <input class="fsearch" id="rssSearch" placeholder="Išči igralca ali klub…" oninput="renderRss()"/>
+    </div>
+    <div class="sf-btns">
+      <button class="sfb a-all" id="rb-all" onclick="setRssF('all')">Vsi</button>
+      <button class="sfb" id="rb-signed" onclick="setRssF('signed')">✓ Prestopi</button>
+      <button class="sfb" id="rb-rumor" onclick="setRssF('rumor')">💬 Govorice</button>
+    </div>
+  </div>
+  <div class="transfers" id="rssEl"></div>
+  <div class="empty" id="rssEmpty" style="display:none">
+    <div class="empty-ico">📰</div>
+    <div class="empty-title">Ni zaznanih prestopov iz novic</div>
+    <div>RSS viri trenutno ne poročajo o novih prestopih, ali pa so vsi že v Eurobasketu.</div>
+  </div>
+</div>
+
 <div class="page" id="p-db">
   <div class="db-toolbar">
     <input class="db-search" id="dbSearch" placeholder="Filtriraj klube, vire, lige…" oninput="filterDB()"/>
@@ -475,6 +509,83 @@ function showPage(id, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
   document.getElementById('p-' + id).classList.add('on');
   btn.classList.add('on');
+  if (id === 'rss') renderRss();
+}
+
+// ── RSS prestopi (loceni zavihek) ──
+let RSS_DATA = [], rssF = 'all';
+async function loadRss() {
+  try {
+    const res = await fetch('rss_transfers.json', {cache:'no-store'});
+    if (res.ok) { const d = await res.json(); RSS_DATA = d.items || []; }
+  } catch(e) { console.warn('rss_transfers.json:', e.message); RSS_DATA = []; }
+}
+
+// ujemanje RSS prestopa z Eurobasket bazo: ce ga Eurobasket ze ima
+// (isti igralec + isti klub, folding), velja za "povezan" in ga v RSS
+// zavihku NE pokazemo (je ze v Prestopi z Eurobasket kljukico).
+function rssLinkedToEB(rssItem) {
+  const rp = fold(rssItem.player), rc = fold(rssItem.to);
+  const rpLast = rp.split(' ').pop();
+  const rcFirst = rc.split(' ')[0];
+  return allT.some(t => {
+    // ujemamo proti prestopom (t.to) IN proti kadru (t.from = trenutni klub),
+    // ker ce je igralec ze pri tem klubu v Eurobasketu, je prestop dejstvo.
+    const tp = fold(t.player);
+    if (tp.split(' ').pop() !== rpLast) return false;
+    const clubs = [fold(t.to||''), fold(t.from||'')];
+    return clubs.some(c => c && (c.includes(rcFirst) || rcFirst.includes(c.split(' ')[0])));
+  });
+}
+
+function setRssF(f) {
+  rssF = f;
+  ['all','signed','rumor'].forEach(id => {
+    const el = document.getElementById('rb-'+id); if(!el) return;
+    el.className = 'sfb'; if (id===f) el.classList.add('a-'+(f==='rumor'?'rumor':f==='signed'?'signed':'all'));
+  });
+  renderRss();
+}
+
+function rssCardHTML(t) {
+  const ini = t.player.split(' ').filter(w=>w.length>1).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+  const cls = t.is_rumor ? 's-rumor' : 's-signed';
+  const pill = t.is_rumor
+    ? '<span class="tpill p-rumor">💬 Govorica</span>'
+    : '<span class="tpill p-signed">✓ Prestop</span>';
+  let dateHTML = '';
+  if (t.date) { const d=new Date(t.date); if(!isNaN(d)) dateHTML = `<div class="tdate">📰 ${d.toLocaleDateString('sl',{day:'2-digit',month:'short'})}</div>`; }
+  const link = t.url ? `<a class="vlink ${t.is_rumor?'vlink-soft':''}" href="${esc(t.url)}" target="_blank" rel="noopener">🔗 ${t.is_rumor?'Vir':'Novica'}<span class="vlink-src">${esc(t.src||'')}</span></a>` : '';
+  return `<div class="tc ${cls}">
+    <div class="av">${esc(ini)}</div>
+    <div>
+      <div class="tp">${esc(t.player)}</div>
+      <div class="tmv"><span class="ta">→</span><span class="tt">${esc(t.to)}</span></div>
+      ${t.headline?`<div class="tsum">${esc(t.headline)}</div>`:''}
+      ${link?`<div class="vrow">${link}</div>`:''}
+    </div>
+    ${pill}
+    ${dateHTML?`<div class="tmeta">${dateHTML}</div>`:''}
+  </div>`;
+}
+
+function renderRss() {
+  const el = document.getElementById('rssEl');
+  const emp = document.getElementById('rssEmpty');
+  const stats = document.getElementById('rssStats');
+  if (!el) return;
+  const q = fold((document.getElementById('rssSearch')||{}).value||'');
+  // odstrani tiste, ki jih Eurobasket ze ima (povezani)
+  let list = RSS_DATA.filter(t => !rssLinkedToEB(t));
+  const totalC = list.filter(t=>!t.is_rumor).length;
+  const totalR = list.filter(t=>t.is_rumor).length;
+  if (stats) stats.innerHTML = `<span class="rss-stat"><b>${totalC}</b> prestopov</span><span class="rss-stat" style="color:var(--yellow)"><b>${totalR}</b> govoric</span>`;
+  if (rssF === 'signed') list = list.filter(t=>!t.is_rumor);
+  else if (rssF === 'rumor') list = list.filter(t=>t.is_rumor);
+  if (q) list = list.filter(t => fold(`${t.player} ${t.to}`).includes(q));
+  if (!list.length) { el.innerHTML=''; emp.style.display='block'; return; }
+  emp.style.display='none';
+  el.innerHTML = list.map(rssCardHTML).join('');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1009,7 +1120,7 @@ async function loadEurobasket() {
 
 // Load the verified base + Eurobasket database, show immediately.
 (async () => {
-  await Promise.all([loadSeed(), loadEurobasket()]);
+  await Promise.all([loadSeed(), loadEurobasket(), loadRss()]);
   allT = [...SEED_DATA, ...EB_DATA];
   dedup(); sortT(); renderT(); updateStats(); updateTicker();
   const upd = document.getElementById('lastUpd');
