@@ -1,0 +1,559 @@
+/* ============================================================================
+   MYTHIC CLASH v2 — style-v2.css  (nalaga se za style.css; uporablja iste spremenljivke)
+============================================================================ */
+
+/* ---- SETUP ---- */
+#v2-setup { min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; align-items: center; padding: 40px 22px 70px; text-align: center; }
+.v2-setup-inner { width: 100%; max-width: 1020px; display: flex; flex-direction: column; align-items: center; }
+.v2-decks { display: grid; gap: 14px; width: 100%; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 18px 0; }
+#v2-setup .deck-select-label { margin-top: 18px; }
+#v2-start { margin-top: 8px; }
+
+/* ---- ARENA ---- */
+#v2-game { height: 100vh; height: 100dvh; overflow: hidden; }
+.v2-arena {
+  height: 100%; display: grid;
+  grid-template-columns: minmax(0,1fr) 264px;
+  grid-template-rows: minmax(0,1fr) 160px;
+  gap: 8px; padding: 8px; max-width: 1240px; margin: 0 auto;
+}
+/* ENO bojišče: nasprotnik zgoraj, ti spodaj, vmes ločnica */
+.v2-field {
+  grid-column: 1; grid-row: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--panel-edge); border-radius: var(--radius); overflow: hidden;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255,107,94,0.06), transparent 60%),
+    radial-gradient(120% 60% at 50% 100%, rgba(255,216,107,0.06), transparent 60%),
+    linear-gradient(180deg, rgba(20,16,24,0.6), rgba(8,8,14,0.5) 50%, rgba(16,18,26,0.6));
+}
+.v2-opp { flex: 1 1 0; border-bottom: none; }
+.v2-you { flex: 1 1 0; }
+.v2-mid { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 5px 14px; border-top: 1px solid var(--panel-edge); border-bottom: 1px solid var(--panel-edge);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); }
+.v2-hand-wrap { grid-column: 1; grid-row: 2; display: flex; align-items: flex-end; justify-content: center; overflow: visible; }
+.v2-panel { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.v2-turn { font-size: 13px; color: var(--ink-dim); }
+.v2-turn b { color: var(--gold-bright); }
+
+.v2-side { border: none; background: transparent; border-radius: 0; padding: 8px 12px; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.v2-opp.v2-side { justify-content: flex-start; }
+.v2-you.v2-side { justify-content: flex-end; }
+.v2-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.v2-meta { font-size: 11px; color: var(--ink-dim); font-family: "SF Mono", monospace; }
+
+/* hero life */
+.v2-hero { display: flex; align-items: center; gap: 8px; min-width: 220px; }
+.v2-hero-name { font-family: "SF Mono", monospace; font-size: 12px; letter-spacing: 0.12em; color: var(--gold); white-space: nowrap; }
+.v2-hero-bar { position: relative; width: 100%; min-width: 130px; height: 18px; flex: 0 0 auto; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; border: 1px solid var(--panel-edge); }
+.v2-hero-fill { height: 100%; background: linear-gradient(90deg, #c0392b, #e74c3c 60%, #ff6b5e); transition: width 0.4s ease; }
+.v2-hero-fill.low { background: linear-gradient(90deg, #7a1d16, #ff5e4d); animation: heroLow 1.2s ease-in-out infinite; }
+@keyframes heroLow { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.35); } }
+.v2-hero-life { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-family: "SF Mono", monospace; }
+.v2-hero-ava { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--c-grad, linear-gradient(160deg,#333,#555)); border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.25); transition: box-shadow .2s, transform .2s; }
+.v2-hero-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.v2-hero-pw { font-size: 9px; letter-spacing: 0.06em; color: #ffd86b; opacity: 0.85; margin-left: 6px; }
+.v2-hero.face-targetable { cursor: crosshair; }
+.v2-hero.face-targetable .v2-hero-ava { border-color: var(--danger); box-shadow: 0 0 14px var(--danger), inset 0 1px 3px rgba(255,255,255,0.3); animation: faceTarget 1s ease-in-out infinite; }
+.v2-hero.face-targetable:hover .v2-hero-ava { transform: scale(1.12); }
+@keyframes faceTarget { 0%,100% { box-shadow: 0 0 8px var(--danger), inset 0 1px 3px rgba(255,255,255,0.3); } 50% { box-shadow: 0 0 20px var(--danger), 0 0 6px var(--danger), inset 0 1px 3px rgba(255,255,255,0.3); } }
+.action-btn.hero-power { border-color: rgba(255,216,107,0.5); background: linear-gradient(160deg, rgba(255,216,107,0.16), rgba(255,170,40,0.08)); color: #ffe8a8; font-weight: 600; }
+.action-btn.hero-power:hover:not(:disabled) { background: linear-gradient(160deg, rgba(255,216,107,0.28), rgba(255,170,40,0.16)); border-color: var(--gold); box-shadow: 0 0 12px rgba(255,216,107,0.35); }
+.action-btn.hero-power .ab-cost { opacity: 0.85; margin-left: 4px; }
+.action-btn.hero-power.used, .action-btn.hero-power:disabled { opacity: 0.4; filter: grayscale(0.6); }
+
+/* mana row */
+.v2-mana-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.v2-mana-lab { font-size: 10px; color: var(--ink-dim); font-family: "SF Mono", monospace; letter-spacing: 0.08em; margin-right: 4px; }
+.v2-mana { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--mc) 70%, white), var(--mc)); color: #06121f; box-shadow: 0 0 8px -2px var(--mc); }
+.v2-mana.tapped { filter: grayscale(1) brightness(0.5); box-shadow: none; transform: rotate(90deg); }
+
+/* board */
+.v2-board-row { flex: 1; display: flex; gap: 8px; align-items: center; min-height: 0; overflow-x: auto; overflow-y: hidden; padding: 2px; }
+.v2-opp .v2-board-row { align-items: flex-start; }
+.v2-you .v2-board-row { align-items: flex-end; }
+.v2-empty { flex: 1; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--panel-edge); border-radius: var(--radius-sm); color: var(--ink-dim); font-size: 12px; font-style: italic; }
+.v2-opp .v2-empty { border-color: rgba(255,107,94,0.4); color: #ff9b8a; }
+
+.v2-champ { width: 132px; flex: 0 0 132px; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); overflow: hidden; background: rgba(8,8,16,0.6); cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.2s ease; position: relative; }
+.v2-champ:hover { transform: translateY(-2px); }
+.v2-champ.tapped { opacity: 0.55; transform: rotate(3deg); }
+.v2-champ.sick .v2-champ-art { filter: saturate(0.7) brightness(0.85); }
+.v2-champ.ready { box-shadow: 0 0 0 1px var(--good), 0 0 14px rgba(111,217,138,0.3); border-color: var(--good); }
+.v2-champ.selected-att { box-shadow: 0 0 0 2px var(--gold-bright), 0 0 20px rgba(233,196,106,0.5); border-color: var(--gold-bright); }
+.v2-champ.targetable { box-shadow: 0 0 0 2px var(--danger), 0 0 18px rgba(255,107,94,0.5); border-color: var(--danger); cursor: crosshair; }
+.v2-champ-art { height: 76px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 30px; background: var(--c-grad); overflow: hidden; }
+.v2-champ-sym { position: relative; z-index: 0; }
+.v2-champ-hp { position: absolute; top: 5px; right: 6px; z-index: 5; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.6); padding: 1px 7px; border-radius: 999px; font-family: "SF Mono", monospace; }
+.v2-tag { position: absolute; top: 5px; left: 6px; z-index: 5; font-size: 12px; }
+.v2-tag.tap { left: auto; right: 6px; top: 28px; }
+.v2-champ-body { padding: 6px 8px 8px; }
+.v2-champ-name { font-size: 12px; font-weight: 700; line-height: 1.1; }
+.v2-hpbar { height: 5px; background: rgba(255,255,255,0.12); border-radius: 999px; margin-top: 5px; overflow: hidden; }
+.v2-hpfill { height: 100%; background: linear-gradient(90deg, var(--good), #aef0c0); }
+.v2-hpfill.low { background: linear-gradient(90deg, var(--danger), #ffb0a8); }
+.v2-status { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 5px; min-height: 14px; font-size: 11px; }
+.v2-st { display: inline-flex; align-items: center; justify-content: center; gap: 1px; min-width: 17px; height: 17px; padding: 0 3px; border-radius: 6px; font-size: 11px; font-weight: 700; line-height: 1; border: 1px solid transparent; }
+.v2-st b { font-size: 8px; }
+.v2-st.buff { background: rgba(94,201,122,0.16); border-color: rgba(94,201,122,0.5); color: #b6f0c6; }
+.v2-st.debuff { background: rgba(255,107,94,0.16); border-color: rgba(255,107,94,0.5); color: #ffc0b6; }
+.v2-kw { margin-left: auto; opacity: 0.9; display: inline-flex; gap: 2px; align-self: center; }
+
+/* hand */
+.v2-hand { display: flex; gap: 8px; align-items: flex-end; overflow-x: auto; padding: 6px 4px 12px; max-width: 100%; }
+.v2-hand.dim { opacity: 0.6; }
+.v2-handcard { width: 110px; flex: 0 0 110px; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); overflow: hidden; background: rgba(8,8,16,0.7); cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
+.v2-handcard:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+.v2-handcard.playable { box-shadow: 0 0 0 1px var(--gold-dim); }
+.v2-handcard.playable:hover { box-shadow: 0 12px 30px rgba(0,0,0,0.6), 0 0 0 1px var(--gold-bright); }
+.v2-hc-art { height: 78px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 24px; background: var(--c-grad); overflow: hidden; }
+.v2-cost { position: absolute; top: 5px; left: 6px; z-index: 5; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.6); color: var(--gold-bright); padding: 1px 7px; border-radius: 999px; font-family: "SF Mono", monospace; }
+.v2-cost.energy { color: #aef2ec; }
+.v2-hc-body { padding: 5px 7px 7px; }
+.v2-hc-name { font-size: 11px; font-weight: 700; line-height: 1.05; }
+.v2-hc-meta { font-size: 9px; color: var(--ink-dim); font-family: "SF Mono", monospace; margin-top: 2px; }
+
+/* attack cost glyphs */
+.v2-cc { display: inline-flex; width: 14px; height: 14px; border-radius: 50%; align-items: center; justify-content: center; font-size: 9px; color: #06121f;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--mc) 70%, white), var(--mc)); }
+
+/* vrstice napadov na championu/karti: [cena] [damage] */
+.v2-atks { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+.v2-atk { display: flex; align-items: center; gap: 6px; padding: 2px 5px; border-radius: 6px;
+  background: rgba(255,255,255,0.04); font-size: 10px; opacity: 0.78; }
+.v2-atk.ok { opacity: 1; background: rgba(111,217,138,0.14); box-shadow: inset 0 0 0 1px rgba(111,217,138,0.3); }
+.v2-atk-cost { display: inline-flex; gap: 2px; }
+.v2-atk-dmg { margin-left: auto; font-family: "SF Mono", monospace; font-weight: 700; color: #ffb38a; }
+.v2-handcard .v2-atks { margin: 4px 6px 0; }
+.v2-handcard .v2-atk { font-size: 9px; }
+/* summon cena bolj izrazita */
+.v2-cost { font-weight: 800; box-shadow: 0 0 0 1px rgba(233,196,106,0.4); }
+
+/* panel reuse */
+.v2-panel .action-panel { flex: 0 0 auto; max-height: 55%; overflow-y: auto; }
+.v2-panel .log-panel { flex: 1; min-height: 0; }
+.action-btn.attack.sel { background: rgba(255,107,94,0.18); border-color: var(--danger); }
+
+/* block modal */
+.v2-block-choices { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.v2-block-choices .action-btn { text-align: left; }
+
+/* ročna izbira mane */
+.v2-manapick { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.v2-mp { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-family: inherit; font-size: 12px;
+  padding: 6px 10px; border-radius: 8px; color: var(--ink);
+  border: 1px solid var(--panel-edge); background: rgba(255,255,255,0.04); border-left: 4px solid var(--mc); }
+.v2-mp:hover { border-color: var(--gold-dim); }
+.v2-mp.sel { border-color: var(--gold-bright); background: rgba(233,196,106,0.14); box-shadow: 0 0 0 1px var(--gold-bright); }
+
+/* ally target (urok/relic na svojega) */
+.v2-champ.target-ally { box-shadow: 0 0 0 2px var(--good), 0 0 18px rgba(111,217,138,0.5); border-color: var(--good); cursor: crosshair; }
+
+/* aktivirana sposobnost (pick prikaz + gumb) */
+.v2-pick-ability.act { background: rgba(127,179,255,0.10); }
+.v2-pick-ability.act b { color: #a8ceff; }
+.action-btn.ability { border-color: rgba(127,179,255,0.4); background: rgba(127,179,255,0.08); color: #bcd6ff; }
+.action-btn.ability:hover:not(:disabled) { background: rgba(127,179,255,0.16); border-color: #7fb3ff; }
+
+/* info kartica (ne-šampion) v izbiri prvega */
+.v2-infocard { width: 150px; cursor: default; opacity: 0.92; }
+.v2-infocard .v2-pick-art { height: 92px; }
+.v2-info-desc { font-size: 10.5px; color: var(--ink-dim); line-height: 1.4; margin-top: 5px; }
+#v2-pick-actions { margin-top: 18px; }
+
+/* ============================================================================
+   FX — puščica, leteča škoda, tresenje, reveal kart
+============================================================================ */
+#v2-fx { position: fixed; inset: 0; pointer-events: none; z-index: 500; overflow: hidden; }
+#v2-arrow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 480; }
+#v2-arrow.hidden { display: none; }
+
+.v2-fd { position: fixed; transform: translate(-50%, -50%); font-family: Georgia, serif; font-weight: 800;
+  font-size: 36px; color: #ff5e4d; text-shadow: 0 2px 0 #5a0e08, 0 0 16px rgba(255,94,77,0.8), 0 3px 10px rgba(0,0,0,0.6);
+  animation: v2fd 1s ease-out forwards; pointer-events: none; }
+.v2-fd.zero { color: #cfcfdf; } .v2-fd.heal { color: #7fe6a0; }
+.v2-fd.dodge { color: #a8ceff; font-size: 22px; }
+.v2-fd.dodge::after { content: " Umik!"; font-size: 14px; }
+@keyframes v2fd { 0% { opacity: 0; transform: translate(-50%,-30%) scale(.6); } 20% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%,-135%) scale(.95); } }
+
+.v2-champ.v2-hit { animation: v2hit .42s ease; }
+@keyframes v2hit { 0%,100% { transform: translateX(0); } 22% { transform: translateX(-7px); } 48% { transform: translateX(7px); } 74% { transform: translateX(-3px); } }
+.v2-hero.v2-hit { animation: v2hit .42s ease; }
+
+/* reveal karte ki jo nasprotnik odigra */
+.v2-reveal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 520; opacity: 0; transition: opacity 0.2s ease; }
+.v2-reveal.show { opacity: 1; } .v2-reveal.out { opacity: 0; }
+.v2-reveal-card { width: 210px; border-radius: 14px; overflow: hidden; background: rgba(8,8,16,0.96);
+  border: 1px solid var(--gold-bright); box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 50px rgba(233,196,106,0.3);
+  transform: scale(0.82) translateY(20px); transition: transform 0.28s cubic-bezier(.2,1.3,.4,1); }
+.v2-reveal.show .v2-reveal-card { transform: scale(1) translateY(0); }
+.v2-reveal-label { text-align: center; font-family: "SF Mono", monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--gold); padding: 9px; text-transform: uppercase; }
+.v2-reveal-art { height: 150px; position: relative; background: var(--c-grad); display: flex; align-items: center; justify-content: center; font-size: 44px; overflow: hidden; }
+.v2-reveal-name { font-size: 15px; font-weight: 700; text-align: center; padding: 8px 8px 2px; }
+.v2-reveal-meta { font-size: 11px; color: var(--ink-dim); text-align: center; padding-bottom: 11px; font-family: "SF Mono", monospace; }
+
+/* ============================================================================
+   ROGUELIKE POHOD (run) zasloni
+============================================================================ */
+#v2-run { min-height: 100vh; overflow-x: hidden; overflow-y: auto; padding: 26px 22px 60px; }
+.run-wrap { max-width: 1040px; margin: 0 auto; }
+.run-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+.run-title { font-family: Georgia, serif; font-size: 28px; background: linear-gradient(180deg,#fff7e0,var(--gold) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.run-sub { color: var(--ink-dim); font-size: 14px; margin: 0 0 18px; max-width: 680px; }
+.run-decks { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.run-statline { font-size: 14px; color: var(--ink); background: var(--panel); border: 1px solid var(--panel-edge); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; }
+.run-statline b { color: var(--gold-bright); }
+.run-ladder { display: flex; flex-direction: column; gap: 9px; }
+.run-stage { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border: 1px solid var(--panel-edge); border-radius: var(--radius); background: var(--panel); }
+.run-stage.done { opacity: 0.7; border-color: rgba(111,217,138,0.3); }
+.run-stage.current { border-color: var(--gold-bright); box-shadow: 0 0 0 1px var(--gold-dim), 0 0 18px rgba(233,196,106,0.15); }
+.run-stage.locked { opacity: 0.45; }
+.run-stage .rs-n { font-family: "SF Mono", monospace; color: var(--ink-dim); width: 18px; text-align: center; }
+.run-stage .rs-sym { font-size: 24px; width: 32px; text-align: center; }
+.run-stage .rs-info { flex: 1; } .run-stage .rs-info b { font-family: Georgia, serif; font-size: 16px; }
+.rs-diff { font-family: "SF Mono", monospace; font-size: 10px; color: var(--gold); background: rgba(233,196,106,0.12); padding: 1px 7px; border-radius: 999px; margin-left: 6px; }
+.rs-mark { font-size: 17px; }
+.run-stage.current .rs-mark { color: var(--gold-bright); } .run-stage.done .rs-mark { color: var(--good); }
+.run-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 22px; }
+.run-foot .btn-primary { flex: 1; padding: 14px; font-size: 16px; }
+
+/* nagrade */
+.reward-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 10px; }
+.reward-card { cursor: pointer; text-align: left; border: 1px solid var(--panel-edge); border-radius: var(--radius); overflow: hidden;
+  background: rgba(8,8,16,0.7); color: var(--ink); transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; padding: 0; }
+.reward-card:hover { transform: translateY(-6px); border-color: var(--gold-bright); box-shadow: 0 16px 44px rgba(0,0,0,0.6), 0 0 0 2px var(--gold-bright); }
+.reward-card.upgrade { padding: 22px 18px; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; text-align: center; }
+.rw-tag { font-family: "SF Mono", monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); padding: 8px 10px 0; }
+.reward-card.upgrade .rw-tag { padding: 0; }
+.rw-up-label { font-family: Georgia, serif; font-size: 20px; color: var(--gold-bright); }
+.rw-up-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+.reward-card .rdc-art { height: 150px; }
+
+/* deck pregled / odstrani */
+.run-deckgrid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(124px,1fr)); }
+.run-deckcard { border: 1px solid var(--panel-edge); border-radius: var(--radius-sm); overflow: hidden; background: rgba(8,8,16,0.7); color: var(--ink); cursor: default; padding: 0; }
+.run-deckcard.removable { cursor: pointer; }
+.run-deckcard.removable:hover { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+.rdc-art { height: 88px; position: relative; background: var(--c-grad); display: flex; align-items: center; justify-content: center; font-size: 26px; overflow: hidden; }
+.rdc-x { position: absolute; top: 5px; right: 6px; z-index: 5; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.6); color: var(--gold-bright); padding: 1px 7px; border-radius: 999px; font-family: "SF Mono", monospace; }
+.rdc-n { font-size: 11.5px; font-weight: 700; padding: 6px 8px 0; line-height: 1.1; }
+.rdc-m { font-size: 9.5px; color: var(--ink-dim); padding: 2px 8px 8px; font-family: "SF Mono", monospace; }
+.run-over { text-align: center; padding-top: 8vh; }
+.run-over .btn-primary { margin-top: 20px; }
+@media (max-width: 720px) { .reward-grid { grid-template-columns: 1fr; } }
+
+/* first-champion pick: razširjene karte (napadi + energije + sposobnost) */
+#v2-pick .mull-cards { gap: 12px; max-height: 76vh; overflow-y: auto; align-items: flex-start; }
+.v2-pickcard { width: 200px; cursor: pointer; text-align: left; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm); overflow: hidden; background: rgba(8,8,16,0.7); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.v2-pickcard:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 2px var(--gold-bright); }
+.v2-pick-art { height: 118px; position: relative; background: var(--c-grad); display: flex; align-items: center; justify-content: center; font-size: 34px; overflow: hidden; }
+.v2-pickcard .v2-champ-hp { top: 6px; right: 8px; }
+.v2-pick-body { padding: 8px 10px 11px; }
+.v2-pick-name { font-size: 13px; font-weight: 700; line-height: 1.12; }
+.v2-pick-meta { font-size: 10px; color: var(--ink-dim); font-family: "SF Mono", monospace; margin: 2px 0 6px; }
+.v2-pick-ability { font-size: 10.5px; color: var(--ink-dim); line-height: 1.4; background: rgba(233,196,106,0.08); border-radius: 6px; padding: 5px 7px; margin-bottom: 4px; }
+.v2-pick-ability b { color: var(--gold-bright); }
+.v2-pick-sec { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dim); font-family: "SF Mono", monospace; margin: 7px 0 3px; }
+.v2-pick-enrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.v2-pick-en { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ink); }
+.v2-pick-en.none { color: var(--ink-dim); font-style: italic; }
+.v2-pick-wr { display: flex; gap: 12px; margin-top: 8px; font-size: 10px; font-family: "SF Mono", monospace; }
+.v2-pick-wr .wk { color: #ff7a7a; } .v2-pick-wr .rs { color: #7ab8ff; }
+
+@media (max-width: 900px) {
+  .v2-arena { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto auto; }
+  .v2-panel { grid-column: 1; grid-row: 5; flex-direction: row; max-height: 24vh; }
+  .v2-champ { width: 120px; flex-basis: 120px; }
+}
+
+/* ---------------- Tooltips (hover + dvoklik pin) ---------------- */
+#v2-tip {
+  position: fixed; z-index: 9999; max-width: 280px; pointer-events: none;
+  background: linear-gradient(160deg, #14141f, #1d1d2c); color: #e9e9f2;
+  border: 1px solid var(--panel-edge, rgba(255,255,255,0.15)); border-radius: 10px;
+  padding: 9px 11px; box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  font-size: 12px; line-height: 1.45; transition: opacity .12s;
+}
+#v2-tip.hidden { display: none; }
+.v2-tip-title { font-weight: 700; color: var(--gold, #ffd97a); margin-bottom: 4px; letter-spacing: 0.02em; }
+.v2-tip-body { color: #c8c8d6; }
+
+/* elementi z razlago dobijo "help" namig */
+.v2-atk, .v2-st, .v2-kwi, .v2-equip, .v2-champ-name { cursor: help; }
+
+/* keyword ikone + statusi */
+.v2-kw { display: inline-flex; gap: 2px; }
+.v2-kwi { display: inline-block; }
+
+/* oprema (orožje/oklep) chip-i na šampionu */
+.v2-equip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; margin-left: 2px; border-radius: 5px;
+  font-size: 11px; border: 1px solid rgba(255,255,255,0.2);
+}
+.v2-equip.weapon { background: rgba(255,120,90,0.18); border-color: rgba(255,120,90,0.45); }
+.v2-equip.armor  { background: rgba(120,170,255,0.18); border-color: rgba(120,170,255,0.45); }
+
+/* ---------------- Pohod: prikaz afinitete (panteoni/energije) ---------------- */
+.run-affinity { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; font-size: 12px; }
+.aff-lab { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim, #9aa0a6); margin-left: 6px; }
+.aff-lab:first-child { margin-left: 0; }
+.run-affinity .aff-chip {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--panel-edge, rgba(255,255,255,0.14));
+  font-family: "SF Mono", monospace; cursor: help;
+}
+
+/* ---------------- Enter-play animacija šampiona (ko karta pride v igro) ---------------- */
+.v2-champ.entering { animation: champEnter 0.5s cubic-bezier(.2,.9,.3,1.25); z-index: 3; }
+@keyframes champEnter {
+  0%   { opacity: 0; transform: translateY(-26px) scale(0.7) rotate(-4deg); }
+  55%  { opacity: 1; transform: translateY(2px) scale(1.08) rotate(1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+.v2-champ.entering::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 6;
+  box-shadow: 0 0 0 2px var(--gold-bright, #ffd97a), 0 0 28px 4px var(--gold-bright, #ffd97a);
+  animation: champEnterGlow 0.6s ease-out forwards;
+}
+@keyframes champEnterGlow { 0% { opacity: 0.95; } 100% { opacity: 0; } }
+
+/* hand karta: jasnejši "press" odziv ob igranju */
+.v2-handcard { position: relative; }
+.v2-handcard:active { transform: translateY(-2px) scale(0.97); }
+
+/* ---------------- Feel poteze: banner + hero damage flash ---------------- */
+.v2-turnbanner {
+  position: fixed; top: 38%; left: 0; right: 0; text-align: center; z-index: 540; pointer-events: none;
+  opacity: 0; transform: translateY(8px);
+}
+.v2-turnbanner.show { animation: turnBan 0.85s cubic-bezier(.2,.8,.2,1) forwards; }
+.v2-turnbanner.out { opacity: 0; transition: opacity 0.3s; }
+.v2-turnbanner span {
+  display: inline-block; font-family: "SF Mono", monospace; font-weight: 800; letter-spacing: 0.16em;
+  font-size: 30px; text-transform: uppercase; padding: 10px 30px; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(8,8,16,0.85), rgba(8,8,16,0.6)); backdrop-filter: blur(3px);
+  border: 1px solid var(--panel-edge, rgba(255,255,255,0.15));
+}
+.v2-turnbanner.you span { color: var(--gold-bright, #ffd97a); box-shadow: 0 0 30px rgba(255,216,107,0.35), inset 0 0 18px rgba(255,216,107,0.12); }
+.v2-turnbanner.opp span { color: #ff8a7a; box-shadow: 0 0 30px rgba(255,107,94,0.3), inset 0 0 18px rgba(255,107,94,0.12); }
+@keyframes turnBan {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.94); }
+  18%  { opacity: 1; transform: translateY(0) scale(1.04); }
+  82%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(1); }
+}
+/* hero bar utrpi udarec v obraz */
+.v2-hero.hero-hurt .v2-hero-bar { animation: heroHurt 0.55s ease; }
+.v2-hero.hero-hurt .v2-hero-ava { animation: heroHurtAva 0.55s ease; }
+@keyframes heroHurt { 0%,100% { box-shadow: none; } 30% { box-shadow: 0 0 0 2px var(--danger), 0 0 18px var(--danger); } }
+@keyframes heroHurtAva { 0%,100% { transform: none; } 25% { transform: translateX(-4px) scale(1.05); } 60% { transform: translateX(3px); } }
+
+/* statusi (buff/curse) kot overlay na sliki šampiona — vedno vidni */
+.v2-champ-statusbar { position: absolute; left: 4px; right: 4px; bottom: 4px; z-index: 6; display: flex; gap: 3px; flex-wrap: wrap; }
+.v2-champ-statusbar .v2-st { backdrop-filter: blur(2px); box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+
+/* ---------------- Damage preview (Hearthstone-like ciljanje) ---------------- */
+#v2-dmgprev {
+  position: fixed; z-index: 545; pointer-events: none; transform: translate(-50%, -100%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 10px; border-radius: 10px; background: rgba(8,8,16,0.92);
+  border: 1px solid var(--panel-edge, rgba(255,255,255,0.18)); box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  font-family: "SF Mono", monospace; white-space: nowrap;
+}
+#v2-dmgprev.hidden { display: none; }
+#v2-dmgprev .dp-dmg { font-size: 20px; font-weight: 800; color: #ff8a7a; line-height: 1; }
+#v2-dmgprev.lethal { border-color: var(--danger); box-shadow: 0 0 22px rgba(255,107,94,0.6); }
+#v2-dmgprev.lethal .dp-dmg { color: #ff5e4d; }
+#v2-dmgprev .dp-lethal { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: #ff5e4d; }
+#v2-dmgprev .dp-parts { font-size: 8.5px; letter-spacing: 0.06em; color: var(--ink-dim, #9aa0a6); }
+/* lethal puščica + tarča */
+#v2-arrow.lethal #v2-arrow-line { stroke: #ff5e4d; }
+#v2-arrow.lethal #ah path { fill: #ff5e4d; }
+.v2-champ.lethal-target { box-shadow: 0 0 0 2px #ff5e4d, 0 0 22px rgba(255,94,77,0.7) !important; }
+.v2-hero.lethal-target .v2-hero-ava { box-shadow: 0 0 0 2px #ff5e4d, 0 0 18px rgba(255,94,77,0.8) !important; }
+
+/* ---------------- Death poof (smrt šampiona) ---------------- */
+.v2-poof {
+  position: absolute; transform: translate(-50%, -50%); z-index: 8; pointer-events: none;
+  font-size: 30px; color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.7);
+  animation: poof 0.7s ease-out forwards;
+}
+@keyframes poof {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(-12deg); }
+  30%  { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(4deg); }
+  100% { opacity: 0; transform: translate(-50%,-90%) scale(0.9) rotate(0); }
+}
+
+/* ---------------- Mana feedback (tap / dodajanje / razpoložljivost) ---------------- */
+.v2-mana-lab b { color: var(--good, #6fd98a); font-size: 13px; }
+.v2-mana { transition: filter .2s, transform .25s, box-shadow .2s; }
+.v2-mana:not(.tapped) { box-shadow: 0 0 7px -1px var(--mc), 0 0 0 1px rgba(255,255,255,0.12); }
+.v2-mana.just-tapped { animation: manaTap 0.42s ease; }
+@keyframes manaTap { 0% { transform: rotate(0) scale(1.15); filter: brightness(1.6); } 60% { transform: rotate(70deg) scale(0.9); } 100% { transform: rotate(90deg); filter: grayscale(1) brightness(0.5); } }
+.v2-mana.just-added { animation: manaAdd 0.5s cubic-bezier(.2,.9,.3,1.4); }
+@keyframes manaAdd { 0% { transform: scale(0) rotate(-40deg); opacity: 0; } 60% { transform: scale(1.3) rotate(6deg); opacity: 1; } 100% { transform: scale(1); } }
+
+/* heal / buff utrip na šampionu */
+.v2-champ.fx-heal { animation: champHeal 0.65s ease; }
+@keyframes champHeal { 0%,100% { box-shadow: none; } 35% { box-shadow: 0 0 0 2px var(--good), 0 0 20px rgba(111,217,138,0.65); } }
+.v2-champ.fx-buff { animation: champBuff 0.75s ease; }
+@keyframes champBuff { 0%,100% { box-shadow: none; } 40% { box-shadow: 0 0 0 2px #ffd97a, 0 0 22px rgba(255,216,107,0.7); } }
+
+/* combo / momentum badge */
+.v2-tag.combo { left: 50%; right: auto; top: 4px; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: var(--mc, #ffd97a);
+  background: rgba(0,0,0,0.7); padding: 1px 7px; border-radius: 999px; border: 1px solid var(--mc, #ffd97a); text-shadow: 0 0 6px var(--mc); z-index: 6; }
+
+/* nadgrajena karta v Pohodu (★) */
+.rdc-up { position: absolute; top: 4px; left: 4px; z-index: 5; color: var(--gold-bright, #ffd97a); font-size: 13px; text-shadow: 0 0 6px rgba(255,216,107,0.8); }
+.run-deckcard .rdc-n { color: inherit; }
+
+/* ---------------- Mana cona POD boardom (tappable energije) ---------------- */
+.v2-manazone { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 6px; margin-top: 4px;
+  border-top: 1px dashed var(--panel-edge); }
+.mz-lab { font-size: 10px; letter-spacing: 0.08em; color: var(--ink-dim); font-family: "SF Mono", monospace; }
+.mz-lab b { color: var(--good, #6fd98a); font-size: 12px; }
+.mz-lab.picking { color: #ffd97a; }
+.mz-cancel { background: rgba(255,107,94,0.15); border: 1px solid var(--danger); color: #ffb0a8; border-radius: 6px; cursor: pointer; font-size: 11px; padding: 1px 7px; }
+.mz-pips { display: flex; gap: 6px; flex-wrap: wrap; }
+.mz-empty { font-size: 11px; color: var(--ink-dim); font-style: italic; }
+.v2-manacard { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  width: 34px; height: 42px; border-radius: 7px; font-size: 16px; cursor: default;
+  background: radial-gradient(circle at 40% 25%, color-mix(in srgb, var(--mc) 65%, white), var(--mc));
+  color: #06121f; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 6px rgba(0,0,0,0.45), 0 0 8px -2px var(--mc); transition: transform .15s, filter .2s, box-shadow .15s; }
+.v2-manacard small { font-size: 6px; letter-spacing: 0.04em; opacity: 0.85; text-transform: uppercase; font-weight: 700; }
+.v2-manacard.tapped { filter: grayscale(1) brightness(0.55); box-shadow: none; transform: rotate(12deg) scale(0.9); }
+.v2-manacard.selectable { cursor: pointer; }
+.v2-manacard.selectable:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px #ffd97a, 0 4px 12px rgba(0,0,0,0.5); }
+.v2-manacard.sel { outline: 2px solid #ffd97a; box-shadow: 0 0 0 2px #ffd97a, 0 0 12px rgba(255,216,107,0.6); transform: translateY(-3px); }
+.v2-manacard.just-tapped { animation: mcTap 0.42s ease; }
+@keyframes mcTap { 0% { transform: rotate(0) scale(1.1); filter: brightness(1.5); } 100% { transform: rotate(12deg) scale(0.9); filter: grayscale(1) brightness(0.55); } }
+.v2-manacard.just-added { animation: mcAdd 0.5s cubic-bezier(.2,.9,.3,1.4); }
+@keyframes mcAdd { 0% { transform: scale(0) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+
+/* taunt / decay / minion */
+.v2-tag.taunt { left: 6px; top: auto; bottom: 4px; right: auto; font-size: 13px; filter: drop-shadow(0 0 4px #7fb3ff); }
+.v2-tag.decay { left: auto; right: 6px; top: 28px; font-size: 10px; font-weight: 800; color: #c89bff; background: rgba(0,0,0,0.6); padding: 0 5px; border-radius: 999px; }
+.v2-champ.taunt { border-color: rgba(127,179,255,0.6); box-shadow: inset 0 0 0 2px rgba(127,179,255,0.25); }
+.v2-champ.taunt.ready { box-shadow: inset 0 0 0 2px rgba(127,179,255,0.3), 0 0 0 1px var(--good), 0 0 14px rgba(111,217,138,0.3); }
+.v2-champ.minion { opacity: 0.97; }
+.v2-champ.minion .v2-champ-name { font-size: 11px; }
+.v2-champ.blocked-target { opacity: 0.45; filter: grayscale(0.5); cursor: not-allowed; }
+
+/* Dnevnik (log) zložljiv */
+.log-panel h4 { user-select: none; display: flex; align-items: center; gap: 6px; }
+.log-panel h4::before { content: "▾"; font-size: 10px; transition: transform .15s; }
+.log-panel.collapsed h4::before { transform: rotate(-90deg); }
+.log-panel.collapsed .log-list { display: none; }
+.log-panel.collapsed { flex: 0 0 auto; }
+
+/* ---------------- Taunt "zid" poudarek (Faza B) ---------------- */
+.v2-champ.taunt { border-color: #7fb3ff; box-shadow: inset 0 0 0 2px rgba(127,179,255,0.45), 0 0 12px rgba(127,179,255,0.3); }
+.v2-champ.taunt::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; z-index: 7;
+  background: linear-gradient(180deg, #9ecbff, #3a6ea5); box-shadow: 0 0 8px #7fb3ff; }
+.v2-champ.taunt.ready { box-shadow: inset 0 0 0 2px rgba(127,179,255,0.5), 0 0 0 1px var(--good), 0 0 14px rgba(111,217,138,0.3); }
+.v2-champ.taunt.targetable { box-shadow: 0 0 0 2px var(--danger), 0 0 18px rgba(255,107,94,0.6), inset 0 0 0 2px rgba(127,179,255,0.4); }
+.v2-tag.taunt { left: 8px; }
+.hint.taunt-hint { color: #cfe3ff; background: rgba(127,179,255,0.12); border: 1px solid rgba(127,179,255,0.4); border-radius: 8px; padding: 5px 8px; }
+
+/* ---------------- Simetrična postavitev: tvoja noga (heroj + energije v eni vrstici) ---------------- */
+.v2-you-footer { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: 0 0 auto; padding-top: 4px; border-top: 1px dashed var(--panel-edge); }
+.v2-you-footer .v2-head { flex: 0 0 auto; gap: 10px; }
+.v2-you-footer .v2-manazone { border-top: none; margin-top: 0; padding: 0; flex: 1 1 auto; justify-content: flex-end; }
+.v2-you-footer .v2-hero { min-width: 200px; }
+
+/* ---------------- Kompaktnejše kartice + noga (prilegajo se nizkim/zoomanim oknom) ---------------- */
+.v2-champ { width: 124px; flex-basis: 124px; }
+.v2-champ-art { height: 54px; font-size: 24px; }
+.v2-champ-body { padding: 4px 6px 5px; }
+.v2-champ-name { font-size: 10.5px; line-height: 1.05; max-height: 2.2em; overflow: hidden; }
+.v2-champ.minion .v2-champ-name { font-size: 10px; }
+.v2-hpbar { height: 4px; margin-top: 4px; }
+.v2-status { margin-top: 3px; min-height: 0; }
+.v2-atks { gap: 2px; margin-top: 4px; }
+.v2-atk { padding: 1px 4px; font-size: 10px; }
+.v2-champ-hp { font-size: 11px; top: 3px; right: 4px; padding: 1px 6px; }
+.v2-tag { top: 3px; left: 4px; font-size: 11px; }
+.v2-tag.tap { top: 24px; }
+.v2-tag.decay { top: 24px; }
+.v2-champ-statusbar { left: 3px; right: 3px; bottom: 3px; }
+/* noga: heroj + energije v eni vrstici, brez ovijanja */
+.v2-you-footer { flex-wrap: nowrap; gap: 12px; padding-top: 3px; }
+.v2-you-footer .v2-hero { min-width: 160px; gap: 6px; }
+.v2-you-footer .v2-hero-ava { width: 32px; height: 32px; font-size: 16px; }
+.v2-you-footer .v2-hero-bar { height: 15px; min-width: 100px; }
+.v2-you-footer .v2-manazone { overflow: hidden; }
+.v2-you-footer .v2-manazone .mz-pips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+.v2-manacard { width: 30px; height: 38px; font-size: 14px; }
+.v2-opp .v2-hero-ava { width: 34px; height: 34px; font-size: 17px; }
+
+/* ---------------- Prilagoditev nizkim oknom / zoomu (da se kartice ne odrežejo) ---------------- */
+@media (max-height: 720px) {
+  .v2-champ-art { height: 48px; }
+  .v2-arena { grid-template-rows: minmax(0,1fr) 150px; }
+}
+@media (max-height: 620px) {
+  .v2-arena { grid-template-rows: minmax(0,1fr) 132px; }
+  .v2-champ-art { height: 40px; font-size: 20px; }
+  .v2-champ-name { font-size: 9.5px; }
+  .v2-handcard { width: 96px; flex: 0 0 96px; }
+  .v2-you-footer .v2-hero-ava, .v2-opp .v2-hero-ava { width: 28px; height: 28px; font-size: 14px; }
+}
+@media (max-height: 540px) {
+  .v2-arena { grid-template-rows: minmax(0,1fr) 108px; gap: 6px; padding: 6px; }
+  .v2-champ-art { height: 30px; font-size: 16px; }
+  .v2-champ-body { padding: 2px 5px 3px; }
+  .v2-champ-name { font-size: 9px; }
+  .v2-atk { padding: 0 4px; font-size: 9.5px; }
+  .v2-handcard { width: 84px; flex: 0 0 84px; }
+}
+
+/* ---------------- Sinergije (chip-i) + Keep gumb ---------------- */
+.v2-syn { display: inline-flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.v2-synchip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  font-family: "SF Mono", monospace; letter-spacing: 0.03em; cursor: help; white-space: nowrap; }
+.v2-synchip.syn-bond { background: rgba(255,216,107,0.16); border: 1px solid rgba(255,216,107,0.5); color: #ffe8a8; }
+.v2-synchip.syn-ally { background: rgba(176,107,255,0.18); border: 1px solid rgba(176,107,255,0.55); color: #d9b6ff;
+  box-shadow: 0 0 10px rgba(176,107,255,0.25); }
+.mull-btn.keep { background: linear-gradient(160deg, rgba(111,217,138,0.25), rgba(111,217,138,0.1)); border: 1px solid var(--good); color: #c6f7d4; font-weight: 700; }
+.mull-btn.keep:hover { background: linear-gradient(160deg, rgba(111,217,138,0.4), rgba(111,217,138,0.18)); box-shadow: 0 0 14px rgba(111,217,138,0.35); }
+
+/* ---------------- Glavni meni (4 načini) ---------------- */
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; width: 100%; max-width: 760px; margin: 22px 0 10px; }
+.mode-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 22px 18px; border-radius: 16px; cursor: pointer;
+  background: linear-gradient(165deg, rgba(40,36,52,0.7), rgba(16,16,26,0.6)); border: 1px solid var(--panel-edge); color: var(--ink, #e9e9f2); transition: transform .12s, box-shadow .15s, border-color .15s; }
+.mode-card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px var(--gold-dim); }
+.mode-card .mc-ic { font-size: 34px; }
+.mode-card h3 { margin: 0; font-size: 18px; color: var(--gold-bright, #ffd97a); }
+.mode-card p { margin: 0; font-size: 12px; color: var(--ink-dim, #9aa0a6); line-height: 1.45; }
+.mode-card.resume { max-width: 760px; width: 100%; flex-direction: row; justify-content: center; gap: 12px; border-color: var(--good); }
+.mode-card.resume .mc-ic { font-size: 20px; }
+
+/* ---------------- Custom deck builder ---------------- */
+.cb-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between; margin: 4px 0 8px; }
+.cb-actions { display: inline-flex; gap: 10px; align-items: center; }
+.cb-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; max-height: 56vh; overflow-y: auto; padding: 4px; }
+.cb-card { position: relative; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; overflow: hidden; background: rgba(8,8,16,0.6); cursor: pointer; transition: transform .1s, box-shadow .12s; }
+.cb-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.5); }
+.cb-card.owned { box-shadow: 0 0 0 2px var(--good), 0 0 12px rgba(111,217,138,0.3); }
+.cb-card .rdc-art { height: 64px; }
+.cb-card .rdc-n { font-size: 10px; font-weight: 700; padding: 3px 5px 0; line-height: 1.05; }
+.cb-card .rdc-m { font-size: 9px; color: var(--ink-dim); padding: 0 5px 5px; }
+.cb-count { position: absolute; top: 4px; left: 4px; background: var(--good); color: #06121f; font-weight: 800; font-size: 11px; padding: 0 6px; border-radius: 999px; z-index: 5; }
+.cb-rem { position: absolute; top: 3px; right: 3px; z-index: 6; width: 20px; height: 20px; border-radius: 6px; background: rgba(255,107,94,0.85); color: #fff; border: none; cursor: pointer; font-weight: 800; line-height: 1; }
+.cb-rem:hover { background: var(--danger); }
+
+/* hero power na deck karticah (izbira) */
+.deck-hp { margin-top: 8px; font-size: 11px; font-weight: 700; color: #ffe8a8; background: rgba(255,216,107,0.12); border: 1px solid rgba(255,216,107,0.4); border-radius: 999px; padding: 3px 9px; display: inline-block; cursor: help; }
+.deck-hp-cost { opacity: 0.8; margin-left: 3px; }
+
+/* Arena: izbira energij */
+.energy-pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+.energy-pick { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--panel-edge); color: var(--ink, #e9e9f2); transition: transform .1s, box-shadow .12s, border-color .12s; }
+.energy-pick:hover { transform: translateY(-2px); border-color: var(--mc); box-shadow: 0 0 10px -2px var(--mc); }
+.energy-pick.has { border-color: var(--mc); background: color-mix(in srgb, var(--mc) 14%, transparent); }
+.energy-pick b { margin-left: auto; min-width: 18px; text-align: center; color: var(--good, #6fd98a); font-size: 14px; }
